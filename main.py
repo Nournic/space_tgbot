@@ -52,7 +52,10 @@ async def main() -> None:
         log.info("При старте закрыто просроченных объектов: %d", len(expired))
 
     bot = Bot(
-        settings.bot_token, default=DefaultBotProperties(parse_mode=ParseMode.HTML, link_preview_is_disabled=True)
+        settings.bot_token,
+        default=DefaultBotProperties(
+            parse_mode=ParseMode.HTML, link_preview_is_disabled=True, allow_sending_without_reply=True
+        ),
     )
     dp = setup_dispatcher(game)
     cleanup = asyncio.create_task(cleanup_loop(game, bot))

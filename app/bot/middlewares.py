@@ -10,7 +10,7 @@ from aiogram import BaseMiddleware
 from aiogram.exceptions import TelegramAPIError
 from aiogram.types import Message, TelegramObject
 
-from app.bot.utils import cb_answer, display_name
+from app.bot.utils import alert_text, cb_answer, display_name
 from app.errors import GameError
 from app.services import Game
 
@@ -50,8 +50,9 @@ class GameMiddleware(BaseMiddleware):
     async def _report(event: TelegramObject, text: str, alert: bool) -> None:
         try:
             if isinstance(event, Message):
-                await event.answer(text)
+                # Ответом на команду: в группе видно, чья это ошибка.
+                await event.reply(text)
             else:  # CallbackQuery: ответ всплывающим уведомлением
-                await cb_answer(event, text, alert=alert)
+                await cb_answer(event, alert_text(text), alert=alert)
         except TelegramAPIError as exc:
             log.debug("error report failed: %s", exc)
