@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from aiogram import Router
+from aiogram import F, Router
 from aiogram.filters import Command, CommandObject
-from aiogram.types import Message
+from aiogram.types import CallbackQuery, Message
 
 from app.bot.formatting import esc, item_title, progress_lines, recipes_text, ship_text, shipyard_text
-from app.bot.keyboards import shipyard_kb, single_action_kb, upgrade_kb
-from app.bot.utils import parse_int, split_args
+from app.bot.keyboards import NavCB, confirm_kb, shipyard_kb, single_action_kb, upgrade_kb
+from app.bot.utils import cb_answer, parse_int, safe_edit, split_args
 from app.constants import (
     MAX_CRAFT_QTY,
     MINE_ENERGY,
@@ -19,11 +19,11 @@ from app.constants import (
     REPAIR_COST_PER_HP,
     SHIP_CLASSES,
 )
-from app.errors import ValidationError
+from app.errors import NotYourButton, ValidationError
 from app.models import CraftResult, MineResult, RepairResult, ShipPurchaseResult, UpgradeResult
 from app.services import Game
 from app.services.crafting import validate_recipe
-from app.services.ships import upgrade_cost
+from app.services.ships import upgrade_cost, validate_ship_class
 
 router = Router(name="ship")
 
@@ -42,21 +42,45 @@ def purchase_text(r: ShipPurchaseResult) -> str:
     )
 
 
-async def render_shipyard(game: Game, user_id: int, chat_id: int | None):
+async def render_shipyard(game: Game, user_id: int):
     p = await game.accounts.profile(user_id)
-    token = await game.tokens.issue(user_id, chat_id, "shipyard")
-    return shipyard_text(p), shipyard_kb(token, p.ship.ship_class)
+    return shipyard_text(p), shipyard_kb(user_id, p.ship.ship_class)
+
+
+async def render_ship_confirm(game: Game, user_id: int, chat_id: int | None, ship_class: str):
+    """Карточка подтверждения: корпус меняется без компенсации, поэтому одного нажатия мало."""
+    p = await game.accounts.profile(user_id)
+    spec = SHIP_CLASSES[ship_class]
+    token = await game.tokens.issue(user_id, chat_id, "shipyard", {"ship": ship_class})
+    text = (
+        f"🚀 Купить «<b>{spec.name}</b>» за <b>{spec.price}</b> кр.?\n"
+        f"📦 трюм {spec.cargo}, ❤️ HP {spec.hp}, ⚔️ бонус атаки +{spec.combat_bonus}, ⭐ ур. {spec.min_level}+\n"
+        f"Текущий корпус «{esc(p.ship.class_name)}» будет заменён без компенсации, модули и груз сохранятся.\n"
+        f"💰 Баланс: {p.balance} кр."
+    )
+    return text, confirm_kb(token, f"✅ Купить за {spec.price} кр.")
 
 
 @router.message(Command("shipyard"))
 async def cmd_shipyard(message: Message, command: CommandObject, game: Game) -> None:
     args = split_args(command.args)
+    uid = message.from_user.id
     if args:
-        result = await game.ships.buy_ship(message.from_user.id, args[0])
-        await message.answer(purchase_text(result))
-        return
-    text, kb = await render_shipyard(game, message.from_user.id, message.chat.id)
+        text, kb = await render_ship_confirm(game, uid, message.chat.id, validate_ship_class(args[0]))
+    else:
+        text, kb = await render_shipyard(game, uid)
     await message.answer(text, reply_markup=kb)
+
+
+@router.callback_query(NavCB.filter(F.view == "sy"))
+async def cb_shipyard(callback: CallbackQuery, callback_data: NavCB, game: Game) -> None:
+    if callback.from_user.id != callback_data.owner:
+        raise NotYourButton()
+    chat_id = callback.message.chat.id if callback.message else None
+    ship_class = validate_ship_class(callback_data.arg)
+    text, kb = await render_ship_confirm(game, callback.from_user.id, chat_id, ship_class)
+    await safe_edit(callback.message, text, kb)
+    await cb_answer(callback)
 
 
 # ----------------------------------------------------------------- модули

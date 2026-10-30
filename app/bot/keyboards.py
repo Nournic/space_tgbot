@@ -85,11 +85,12 @@ def upgrade_kb(token: str, levels: dict[str, int], costs: dict[str, int]) -> Inl
     return b.as_markup()
 
 
-def shipyard_kb(token: str, current: str) -> InlineKeyboardMarkup:
+def shipyard_kb(owner: int, current: str) -> InlineKeyboardMarkup:
+    """Выбор корпуса — read-only навигация: деньги списываются только после подтверждения."""
     b = InlineKeyboardBuilder()
     for sc in SHIP_CLASSES.values():
         if sc.price is not None and sc.id != current:
-            b.add(token_button(f"Купить «{sc.name}» за {sc.price}", token, sc.id))
+            b.add(nav_button(f"Купить «{sc.name}» за {sc.price}", "sy", owner, sc.id))
     b.adjust(1)
     return b.as_markup()
 
@@ -159,12 +160,12 @@ def top_kb(active: str) -> InlineKeyboardMarkup:
     )
 
 
-def disband_kb(token: str) -> InlineKeyboardMarkup:
+def confirm_kb(token: str, yes_text: str) -> InlineKeyboardMarkup:
+    """Подтверждение необратимого действия: «yes» выполняет, «no» гасит токен."""
     return InlineKeyboardMarkup(
-        inline_keyboard=[
-            [
-                token_button("💥 Да, распустить", token, "yes"),
-                token_button("Отмена", token, "no"),
-            ]
-        ]
+        inline_keyboard=[[token_button(yes_text, token, "yes"), token_button("Отмена", token, "no")]]
     )
+
+
+def disband_kb(token: str) -> InlineKeyboardMarkup:
+    return confirm_kb(token, "💥 Да, распустить")

@@ -81,9 +81,14 @@ async def cb_token(callback: CallbackQuery, callback_data: TokenCB, game: Game) 
         await cb_answer(callback, "🔧 Улучшено")
 
     elif action == "shipyard":
-        result = await game.ships.buy_ship(uid, choice, token=token)
-        await safe_edit(callback.message, purchase_text(result))
-        await cb_answer(callback, "🚀 Корабль куплен")
+        if choice == "yes":
+            result = await game.ships.buy_ship(uid, str(payload.get("ship")), token=token)
+            await safe_edit(callback.message, purchase_text(result))
+            await cb_answer(callback, "🚀 Корабль куплен")
+        else:
+            await game.tokens.discard(token, uid, "shipyard")
+            await safe_edit(callback.message, "↩️ Покупка корабля отменена.")
+            await cb_answer(callback)
 
     elif action == "repair":
         result = await game.ships.repair(uid, None, token=token)
