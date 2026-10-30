@@ -28,7 +28,8 @@ async def render_item_card(game: Game, user_id: int, chat_id: int | None, item_i
     p = await game.accounts.profile(user_id)
     buy, sell = game.economy.prices_on(p.planet_id)[item_id]
     available = p.inventory.get(item_id, 0) - p.reserved.get(item_id, 0)
-    token = await game.tokens.issue(user_id, chat_id, "market", {"planet": p.planet_id, "item": item_id})
+    payload = {"planet": p.planet_id, "item": item_id, "date": utc_date(game.ctx.clock.now())}
+    token = await game.tokens.issue(user_id, chat_id, "market", payload)
     header = note + "\n\n" if note else ""
     text = (
         f"{header}"
