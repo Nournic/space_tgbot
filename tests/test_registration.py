@@ -8,6 +8,13 @@ from app.errors import NotRegistered
 from tests.conftest import make_user, snapshot
 
 
+def test_migration_versions_are_contiguous():
+    # Ловит ситуацию, когда в двух ветках параллельно добавили миграцию с одним номером.
+    versions = [version for version, _, _ in MIGRATIONS]
+    assert versions == list(range(1, len(MIGRATIONS) + 1))
+    assert all(statements for _, _, statements in MIGRATIONS)
+
+
 async def test_register_creates_start_state(game):
     result = await game.accounts.register(1, "Алиса")
     p = result.profile

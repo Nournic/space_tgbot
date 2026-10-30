@@ -1,0 +1,17 @@
+# Владельцы кода: их ревью обязательно, если в branch protection включено «Require review from Code Owners».
+# Замените @YOUR_GITHUB_LOGIN на реальный логин мейнтейнера (или команду @org/team) и раскомментируйте строки.
+
+# * @YOUR_GITHUB_LOGIN
+
+# Деньги, баланс и схема БД — критичные зоны.
+# /app/services/   @YOUR_GITHUB_LOGIN
+# /app/db/         @YOUR_GITHUB_LOGIN
+# /app/constants.py @YOUR_GITHUB_LOGIN
+
+# Правила для агентов, CI и деплой.
+# /AGENTS.md       @YOUR_GITHUB_LOGIN
+# /.github/        @YOUR_GITHUB_LOGIN
+# /.claude/        @YOUR_GITHUB_LOGIN
+# /Dockerfile      @YOUR_GITHUB_LOGIN
+# /docker-compose.yml @YOUR_GITHUB_LOGIN
+# /deploy.sh       @YOUR_GITHUB_LOGIN
