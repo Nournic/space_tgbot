@@ -40,6 +40,8 @@ OFFER_TTL = 300
 CHALLENGE_TTL = 300
 TOKEN_TTL = 900  # время жизни одноразовой inline-клавиатуры
 PVP_XP_PAIR_COOLDOWN = 3600
+FLOOD_MAX_ACTIONS = 5  # антифлуд: не больше 5 команд/нажатий одного игрока…
+FLOOD_WINDOW_SECONDS = 10  # …за 10 секунд
 
 # --------------------------------------------------------------------------- XP
 XP_PER_LEVEL = 100

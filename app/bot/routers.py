@@ -9,6 +9,7 @@ from aiogram.types import BotCommand
 
 from app.bot.handlers import actions, clans, common, market, progression, pve, pvp, ship, trading, travel
 from app.bot.middlewares import GameMiddleware
+from app.bot.throttle import Throttle, ThrottleMiddleware
 from app.services import Game
 
 COMMANDS = [
@@ -55,7 +56,7 @@ def build_dispatcher() -> Dispatcher:
     """Роутеры модулей — синглтоны aiogram, поэтому диспетчер собирается один раз на процесс.
 
     Экземпляр Game передаётся через workflow data: ``dp["game"] = game`` или
-    ``dp.feed_update(bot, update, game=game)``.
+    ``dp.feed_update(bot, update, game=game)``. Антифлуд включается так же: ``dp["throttle"]``.
     """
     root = Router(name="root")
     # Игнорируем апдейты без отправителя-человека (каналы, анонимные админы, боты).
@@ -64,6 +65,9 @@ def build_dispatcher() -> Dispatcher:
     for module in (common, market, travel, ship, pve, pvp, trading, progression, clans, actions):
         root.include_router(module.router)
     dp = Dispatcher()
+    throttle = ThrottleMiddleware()  # раньше GameMiddleware: лишние апдейты не трогают БД
+    dp.message.middleware(throttle)
+    dp.callback_query.middleware(throttle)
     middleware = GameMiddleware()
     dp.message.middleware(middleware)
     dp.callback_query.middleware(middleware)
@@ -74,4 +78,5 @@ def build_dispatcher() -> Dispatcher:
 def setup_dispatcher(game: Game) -> Dispatcher:
     dp = build_dispatcher()
     dp["game"] = game
+    dp["throttle"] = Throttle()
     return dp
