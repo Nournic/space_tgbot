@@ -7,6 +7,7 @@ from html import escape
 from app.clock import format_utc
 from app.constants import (
     ACHIEVEMENTS,
+    CLAN_MAX_MEMBERS,
     CRAFT_FEE_PER_UNIT,
     ENEMIES,
     ITEM_ORDER,
@@ -20,6 +21,7 @@ from app.constants import (
     RECIPES,
     SHIP_CLASSES,
     STAT_FIELDS,
+    XP_CRAFT,
     XP_PER_LEVEL,
 )
 from app.models import (
@@ -203,7 +205,7 @@ def prices_text(table: dict[str, dict[str, tuple[int, int]]], items: list[str], 
 
 
 def recipes_text() -> str:
-    lines = [f"🛠 <b>Рецепты</b> (работа — {CRAFT_FEE_PER_UNIT} кр. за единицу, +2 XP за операцию)", ""]
+    lines = [f"🛠 <b>Рецепты</b> (работа — {CRAFT_FEE_PER_UNIT} кр. за единицу, +{XP_CRAFT} XP за операцию)", ""]
     for out, ingredients in RECIPES.items():
         ing = " + ".join(f"{q} {item_title(i)}" for i, q in ingredients.items())
         lines.append(f"1 {item_title(out)} (<code>{out}</code>) ← {ing}")
@@ -358,7 +360,7 @@ def clan_text(v: ClanView) -> str:
     lines = [
         f"🏰 <b>{esc(v.name)}</b> (ID {v.id})",
         f"👑 Лидер: {esc(v.leader_name)}",
-        f"👥 Участники: {v.member_count}/30",
+        f"👥 Участники: {v.member_count}/{CLAN_MAX_MEMBERS}",
         f"🏦 Казна: <b>{v.treasury}</b> кр.",
         f"🚪 {'Открыт' if v.is_open else 'Закрыт'} для вступления",
     ]

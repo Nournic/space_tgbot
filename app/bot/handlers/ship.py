@@ -10,14 +10,21 @@ from app.bot.formatting import esc, item_title, progress_lines, recipes_text, sh
 from app.bot.keyboards import shipyard_kb, single_action_kb, upgrade_kb
 from app.bot.utils import parse_int, split_args
 from app.constants import (
+    ARMOR_DAMAGE_REDUCTION,
+    ARMOR_HP_PER_LEVEL,
+    CARGO_PER_LEVEL,
+    CRAFT_FEE_PER_UNIT,
     MAX_CRAFT_QTY,
     MINE_ENERGY,
+    MODULE_COST_STEP,
     MODULE_MAX_LEVEL,
     MODULE_ORDER,
     MODULES,
     RECIPES,
     REPAIR_COST_PER_HP,
     SHIP_CLASSES,
+    TRAVEL_MIN_COST,
+    WEAPON_PER_LEVEL,
 )
 from app.errors import ValidationError
 from app.models import CraftResult, MineResult, RepairResult, ShipPurchaseResult, UpgradeResult
@@ -69,13 +76,14 @@ async def render_upgrades(game: Game, user_id: int, chat_id: int | None, prefix:
     levels = {m: p.ship.module_level(m) for m in MODULE_ORDER}
     costs = {m: upgrade_cost(levels[m] + 1) for m in MODULE_ORDER if levels[m] < MODULE_MAX_LEVEL}
     lines = [
-        prefix + "🔧 <b>Улучшения модулей</b> (уровни 0–5, переход на n стоит 500 × n)",
+        prefix
+        + f"🔧 <b>Улучшения модулей</b> (уровни 0–{MODULE_MAX_LEVEL}, переход на n стоит {MODULE_COST_STEP} × n)",
         f"💰 Баланс: {p.balance}",
         "",
-        f"{MODULES['cargo']}: {levels['cargo']} (+10 трюма/ур.)",
-        f"{MODULES['engine']}: {levels['engine']} (−1 энергии перелёта/ур., минимум 5)",
-        f"{MODULES['weapon']}: {levels['weapon']} (+4 к силе/ур.)",
-        f"{MODULES['armor']}: {levels['armor']} (+25 макс. HP и −2 урона/ур.)",
+        f"{MODULES['cargo']}: {levels['cargo']} (+{CARGO_PER_LEVEL} трюма/ур.)",
+        f"{MODULES['engine']}: {levels['engine']} (−1 энергии перелёта/ур., минимум {TRAVEL_MIN_COST})",
+        f"{MODULES['weapon']}: {levels['weapon']} (+{WEAPON_PER_LEVEL} к силе/ур.)",
+        f"{MODULES['armor']}: {levels['armor']} (+{ARMOR_HP_PER_LEVEL} макс. HP и −{ARMOR_DAMAGE_REDUCTION} урона/ур.)",
         "",
         "Команда: <code>/upgrade engine</code>",
     ]
@@ -171,6 +179,7 @@ async def cmd_craft(message: Message, command: CommandObject, game: Game) -> Non
     ingredients = ", ".join(f"{q * qty} {item_title(i)}" for i, q in RECIPES[item_id].items())
     token = await game.tokens.issue(message.from_user.id, message.chat.id, "craft", {"item": item_id, "qty": qty})
     await message.answer(
-        f"🛠 Произвести <b>{qty} × {item_title(item_id)}</b>?\nИнгредиенты: {esc(ingredients)}; работа {10 * qty} кр.",
+        f"🛠 Произвести <b>{qty} × {item_title(item_id)}</b>?\n"
+        f"Ингредиенты: {esc(ingredients)}; работа {CRAFT_FEE_PER_UNIT * qty} кр.",
         reply_markup=single_action_kb("✅ Подтвердить производство", token, "ok"),
     )
