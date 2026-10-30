@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from html import escape
+
 from app.constants import CRAFT_FEE_PER_UNIT, ITEMS, MAX_CRAFT_QTY, RECIPES, XP_CRAFT
 from app.db import repositories as repo
 from app.errors import GameError, StaleAction, ValidationError
@@ -14,7 +16,7 @@ from app.services.economy import validate_qty
 def validate_recipe(item_id: str) -> str:
     item_id = (item_id or "").strip().lower()
     if item_id not in RECIPES:
-        raise ValidationError(f"🛠 Нет рецепта для «{item_id[:20]}». Смотрите /recipes.")
+        raise ValidationError(f"🛠 Нет рецепта для «{escape(item_id[:20])}». Смотрите /recipes.")
     return item_id
 
 
