@@ -25,7 +25,7 @@ python main.py
 2. **Ветка от свежего `main`:** `feat/…`, `fix/…`, `chore/…` или `docs/…`. Одна задача — одна ветка.
 3. **Коммиты** в формате Conventional Commits, маленькие. Форматирование ruff не смешивается с логикой.
 4. **PR** по шаблону. Укажите, участвовал ли ИИ. Автор PR читает весь diff, включая код агента, и отвечает за него.
-5. **CI** должен быть зелёным: ruff lint, ruff format, pytest на Python 3.11 и 3.12, сборка Docker.
+5. **CI** должен быть зелёным: ruff lint, ruff format, pytest на Python 3.11, 3.12 и 3.13, сборка Docker.
 6. **Ревью** — минимум одно одобрение человека. Изменения в `app/services/`, `app/db/` и `app/constants.py` (деньги, баланс, схема) смотрим особенно внимательно.
 7. **Merge** — только squash merge. Ветка удаляется автоматически.
 
@@ -63,7 +63,7 @@ git checkout main && git pull && ./deploy.sh
 
 - [ ] Settings → Branches → правило для `main`:
   - [ ] Require a pull request before merging, 1 approval
-  - [ ] Require status checks: `lint & tests (py3.11)`, `lint & tests (py3.12)`, `docker build`
+  - [ ] Require status checks: `lint & tests (py3.11)`, `lint & tests (py3.12)`, `lint & tests (py3.13)`, `docker build`
   - [ ] Block force pushes, запретить удаление ветки
 - [ ] Settings → General → Pull Requests: разрешить только «Squash merging» и включить «Automatically delete head branches».
 - [ ] Вписать логин мейнтейнера в `.github/CODEOWNERS` и включить «Require review from Code Owners».
