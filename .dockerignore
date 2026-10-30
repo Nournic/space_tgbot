@@ -1,0 +1,16 @@
+.git
+.gitignore
+.env
+.venv
+venv
+__pycache__
+*.pyc
+.pytest_cache
+.claude
+data
+backups
+*.sqlite3
+*.sqlite3-wal
+*.sqlite3-shm
+*.zip
+*.tgz

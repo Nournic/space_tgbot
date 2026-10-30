@@ -1,0 +1,21 @@
+services:
+  bot:
+    build: .
+    image: space-trader-bot:latest
+    container_name: space_trader_bot
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      # Путь внутри контейнера фиксирован и указывает на том с данными.
+      DATABASE_PATH: /app/data/space_trader.sqlite3
+    volumes:
+      - space_trader_data:/app/data
+    stop_grace_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  space_trader_data:
