@@ -22,6 +22,16 @@ def upgrade_cost(next_level: int) -> int:
     return MODULE_COST_STEP * next_level
 
 
+def validate_ship_class(raw: str | None) -> str:
+    """Класс корабля, который вообще продаётся на верфи (без проверки уровня и денег)."""
+    ship_class = (raw or "").strip().lower()
+    if ship_class not in SHIP_CLASSES:
+        raise ValidationError("❓ Неизвестный класс корабля. Смотрите /shipyard.")
+    if SHIP_CLASSES[ship_class].price is None:
+        raise GameError("🚫 Этот корабль нельзя купить.")
+    return ship_class
+
+
 class ShipService:
     def __init__(self, ctx: ServiceContext) -> None:
         self.ctx = ctx
@@ -32,17 +42,15 @@ class ShipService:
         return await repo.consume_token(conn, token, user_id, action, now)
 
     async def buy_ship(self, user_id: int, ship_class: str, token: str | None = None) -> ShipPurchaseResult:
-        ship_class = (ship_class or "").strip().lower()
-        if ship_class not in SHIP_CLASSES:
-            raise ValidationError("❓ Неизвестный класс корабля. Смотрите /shipyard.")
+        ship_class = validate_ship_class(ship_class)
         spec = SHIP_CLASSES[ship_class]
         async with self.ctx.db.transaction() as conn:
             now = self.ctx.clock.now()
-            await self._consume(conn, token, user_id, "shipyard", now)
+            payload = await self._consume(conn, token, user_id, "shipyard", now)
+            if token is not None and payload.get("ship") != ship_class:  # подтверждали другой корабль
+                raise StaleAction()
             user = await repo.require_user(conn, user_id)
             ship = await load_ship(conn, user_id, now)
-            if spec.price is None:
-                raise GameError("🚫 Этот корабль нельзя купить.")
             if ship.ship_class == ship_class:
                 raise GameError("🚫 У вас уже корабль этого класса.")
             if int(user["level"]) < spec.min_level:
