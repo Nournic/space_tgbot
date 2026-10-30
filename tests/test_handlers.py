@@ -7,11 +7,11 @@ from datetime import UTC, datetime
 import pytest
 from aiogram import Bot
 from aiogram.methods import AnswerCallbackQuery, EditMessageText, SendMessage, TelegramMethod
-from aiogram.types import CallbackQuery, Chat, Message, Update, User
+from aiogram.types import CallbackQuery, Chat, ForumTopicCreated, Message, Update, User
 
 from app.bot.middlewares import INTERNAL_ERROR
 from app.bot.routers import build_dispatcher
-from tests.conftest import give_items
+from tests.conftest import give_items, make_user, snapshot
 
 CHAT = Chat(id=-1001, type="supergroup", title="Test")
 
@@ -62,11 +62,22 @@ class Harness:
     async def feed(self, update: Update) -> None:
         await self.dp.feed_update(self.bot, update, game=self.game)
 
-    async def send(self, uid: int, text: str, reply_to: int | None = None) -> None:
+    async def send(
+        self, uid: int, text: str, reply_to: int | None = None, topic_by: int | None = None, thread_id: int = 77
+    ) -> None:
+        """topic_by — сообщение в теме форума, созданной этим игроком (без явного ответа)."""
         self.update_id += 1
         reply = None
         if reply_to is not None:
             reply = Message(message_id=1, date=datetime.now(UTC), chat=CHAT, from_user=user(reply_to), text="привет")
+        elif topic_by is not None:
+            reply = Message(
+                message_id=thread_id,
+                date=datetime.now(UTC),
+                chat=CHAT,
+                from_user=user(topic_by),
+                forum_topic_created=ForumTopicCreated(name="Тема", icon_color=0x6FB9F0),
+            )
         msg = Message(
             message_id=self.update_id + 10,
             date=datetime.now(UTC),
@@ -74,6 +85,8 @@ class Harness:
             from_user=user(uid),
             text=text,
             reply_to_message=reply,
+            message_thread_id=thread_id if topic_by is not None else None,
+            is_topic_message=True if topic_by is not None else None,
         )
         await self.feed(Update(update_id=self.update_id, message=msg))
 
@@ -215,3 +228,18 @@ async def test_clan_disband_flow(h, game):
     await h.press(1, h.button("Да, распустить"))
     assert await game.clans.my_clan_id(1) is None
     assert any("распущен" in t for t in h.bot.texts())
+
+
+async def test_topic_root_is_not_a_reply(h, game):
+    # В теме форума reply_to_message указывает на создание темы — это не ответ игроку 2.
+    await h.send(1, "/register")
+    await make_user(game, 2)
+    await h.send(1, "/clan create Орион")
+    await h.send(2, "/clan join 1")
+    await give_items(game, 1, water=5)
+    before = await snapshot(game, 1)
+    for cmd in ("/clan transfer", "/challenge 100", "/offer water 5 0"):
+        await h.send(1, cmd, topic_by=2)
+        assert "ответом на сообщение" in h.bot.texts()[-1]
+    assert (await game.clans.info(1)).leader_id == 1
+    assert await snapshot(game, 1) == before
