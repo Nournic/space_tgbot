@@ -51,8 +51,17 @@ def parse_planet(raw: str) -> str:
 
 
 def reply_target(message: Message) -> User:
-    """Пользователь, на сообщение которого ответили командой."""
+    """Пользователь, на сообщение которого ответили командой.
+
+    В темах форума Telegram подставляет в reply_to_message служебное сообщение о
+    создании темы, даже если игрок ни на что не отвечал. Такой «ответ» не считается.
+    """
     reply = message.reply_to_message
+    if reply is not None and (
+        reply.forum_topic_created is not None
+        or (message.is_topic_message and reply.message_id == message.message_thread_id)
+    ):
+        reply = None
     if reply is None or reply.from_user is None:
         raise ValidationError("↩️ Используйте команду ответом на сообщение другого игрока.")
     if reply.from_user.is_bot:
