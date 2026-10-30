@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import html
 import logging
+import re
 
 from aiogram.exceptions import TelegramAPIError, TelegramBadRequest
 from aiogram.types import CallbackQuery, InlineKeyboardMarkup, Message, User
@@ -13,6 +15,8 @@ from app.errors import ValidationError
 log = logging.getLogger(__name__)
 
 MAX_INT_ARG = 10_000_000
+ALERT_MAX_LEN = 200  # лимит Telegram на текст answerCallbackQuery
+_TAG_RE = re.compile(r"<[^>]+>")
 
 ITEM_ALIASES = {**{k: k for k in ITEMS}, **{v.name.casefold(): k for k, v in ITEMS.items()}}
 PLANET_ALIASES = {**{k: k for k in PLANETS}, **{v.name.casefold(): k for k, v in PLANETS.items()}}
@@ -58,6 +62,19 @@ def reply_target(message: Message) -> User:
     if reply.from_user.is_bot:
         raise ValidationError("🤖 С ботами играть нельзя — ответьте на сообщение игрока.")
     return reply.from_user
+
+
+def alert_text(text: str) -> str:
+    """Текст для всплывающего уведомления: HTML там не разбирается, длина ограничена."""
+    plain = html.unescape(_TAG_RE.sub("", text))
+    if len(plain.encode("utf-16-le")) // 2 <= ALERT_MAX_LEN:
+        return plain
+    out = ""
+    for ch in plain:  # Telegram считает длину в UTF-16, эмодзи занимают две единицы
+        if (len((out + ch).encode("utf-16-le")) // 2) > ALERT_MAX_LEN - 1:
+            break
+        out += ch
+    return out + "…"
 
 
 async def cb_answer(callback: CallbackQuery, text: str | None = None, alert: bool = False) -> None:
