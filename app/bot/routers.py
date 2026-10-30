@@ -7,7 +7,7 @@ from functools import lru_cache
 from aiogram import Dispatcher, F, Router
 from aiogram.types import BotCommand
 
-from app.bot.handlers import actions, clans, common, market, progression, pve, pvp, ship, trading, travel
+from app.bot.handlers import actions, admin, clans, common, market, progression, pve, pvp, ship, trading, travel
 from app.bot.middlewares import GameMiddleware
 from app.bot.throttle import Throttle, ThrottleMiddleware
 from app.services import Game
@@ -62,7 +62,7 @@ def build_dispatcher() -> Dispatcher:
     # Игнорируем апдейты без отправителя-человека (каналы, анонимные админы, боты).
     root.message.filter(F.from_user.is_bot.is_(False))
     root.callback_query.filter(F.from_user.is_bot.is_(False))
-    for module in (common, market, travel, ship, pve, pvp, trading, progression, clans, actions):
+    for module in (common, market, travel, ship, pve, pvp, trading, progression, clans, admin, actions):
         root.include_router(module.router)
     dp = Dispatcher()
     throttle = ThrottleMiddleware()  # раньше GameMiddleware: лишние апдейты не трогают БД
@@ -75,8 +75,9 @@ def build_dispatcher() -> Dispatcher:
     return dp
 
 
-def setup_dispatcher(game: Game) -> Dispatcher:
+def setup_dispatcher(game: Game, admin_ids: frozenset[int] = frozenset()) -> Dispatcher:
     dp = build_dispatcher()
+    dp["admin_ids"] = admin_ids
     dp["game"] = game
     dp["throttle"] = Throttle()
     return dp
