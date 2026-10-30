@@ -19,7 +19,8 @@ PvE-охота на пиратов, добровольные PvP-дуэли со
    ```bash
    python -m venv .venv
    # Windows: .venv\Scripts\activate     Linux/macOS: source .venv/bin/activate
-   pip install -r requirements.txt
+   pip install -r requirements.txt        # только для запуска бота
+   pip install -r requirements-dev.txt    # для разработки: + pytest, ruff
    ```
 
 3. Создайте бота у [@BotFather](https://t.me/BotFather): `/newbot` → получите токен.
@@ -230,6 +231,16 @@ tests/             pytest-тесты (сервисы, хендлеры, конк
 источник истины для баланса — `users.balance`.
 
 ---
+
+## Разработка
+
+Командная работа идёт через ветки и PR с обязательным CI (GitHub Actions): ruff и pytest на Python 3.11/3.12, плюс сборка Docker. Процесс описан в [CONTRIBUTING.md](CONTRIBUTING.md). Правила для ИИ-агентов (Claude Code, Codex) — в [AGENTS.md](AGENTS.md). `CLAUDE.md` импортирует этот файл, а общие разрешения Claude Code лежат в `.claude/settings.json`.
+
+```bash
+pip install -r requirements-dev.txt
+ruff check --fix . && ruff format .
+pytest -q
+```
 
 ## Тесты
 
