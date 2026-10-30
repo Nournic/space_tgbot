@@ -331,7 +331,8 @@ class ExpiredNotice:
     id: int
     chat_id: int | None
     message_id: int | None
-    text: str
+    text: str  # короткий запасной текст, если view нет
+    view: OfferView | ChallengeView | None = None  # итоговое состояние для полного текста
 
 
 __all__ = [

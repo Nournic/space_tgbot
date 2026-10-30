@@ -213,6 +213,7 @@ class OfferService:
                             row["chat_id"],
                             row["message_id"],
                             f"⌛ Предложение #{row['id']} истекло, резерв товара снят.",
+                            _view(await _get(conn, int(row["id"]))),
                         )
                     )
         return notices
