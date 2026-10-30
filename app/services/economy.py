@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from html import escape
+
 from app.clock import utc_date
 from app.constants import (
     BASE_PRICES,
@@ -46,7 +48,7 @@ def sell_price(buy: int) -> int:
 def validate_item(item_id: str) -> str:
     item_id = (item_id or "").strip().lower()
     if item_id not in ITEMS:
-        raise ValidationError(f"❓ Неизвестный товар «{item_id[:20]}». Доступны: {', '.join(ITEM_ORDER)}.")
+        raise ValidationError(f"❓ Неизвестный товар «{escape(item_id[:20])}». Доступны: {', '.join(ITEM_ORDER)}.")
     return item_id
 
 
