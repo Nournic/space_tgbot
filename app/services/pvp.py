@@ -331,6 +331,7 @@ class PvpService:
                             row["chat_id"],
                             row["message_id"],
                             f"⌛ Вызов #{row['id']} истёк. Ставка возвращена инициатору.",
+                            _view(await _get(conn, int(row["id"]))),
                         )
                     )
         return notices

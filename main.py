@@ -14,7 +14,7 @@ from aiogram.exceptions import TelegramAPIError
 from app.bot.routers import bot_commands, setup_dispatcher
 from app.db.connection import Database
 from app.services import build_game
-from app.tasks import cleanup_loop
+from app.tasks import cleanup_loop, notify_expired
 from config import load_settings
 
 
@@ -61,6 +61,8 @@ async def main() -> None:
             await bot.set_my_commands(bot_commands())
         except TelegramAPIError as exc:
             log.warning("Не удалось зарегистрировать список команд: %s", exc)
+        # Сообщения закрытых при старте предложений и вызовов: убираем кнопки и показываем итог.
+        await notify_expired(bot, expired, game.ctx.clock.now())
         log.info("Бот запущен (long polling)")
         await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types())
     finally:
