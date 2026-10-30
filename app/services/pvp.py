@@ -10,6 +10,7 @@ Escrow: при создании вызова ставка инициатора �
 Урон проигравшему: max(1, random(20..35) − 2 × броня);
 победителю (и обоим при ничьей): random(0..10), снижаемый бронёй (0 остаётся 0).
 """
+
 from __future__ import annotations
 
 from app.constants import (
@@ -41,10 +42,17 @@ _SELECT = (
 
 def _view(row) -> ChallengeView:
     return ChallengeView(
-        id=int(row["id"]), challenger_id=int(row["challenger_id"]), challenger_name=row["challenger_name"],
-        target_id=int(row["target_id"]), target_name=row["target_name"], stake=int(row["stake"]),
-        status=row["status"], created_at=int(row["created_at"]), expires_at=int(row["expires_at"]),
-        chat_id=row["chat_id"], message_id=row["message_id"],
+        id=int(row["id"]),
+        challenger_id=int(row["challenger_id"]),
+        challenger_name=row["challenger_name"],
+        target_id=int(row["target_id"]),
+        target_name=row["target_name"],
+        stake=int(row["stake"]),
+        status=row["status"],
+        created_at=int(row["created_at"]),
+        expires_at=int(row["expires_at"]),
+        chat_id=row["chat_id"],
+        message_id=row["message_id"],
         winner_id=None if row["winner_id"] is None else int(row["winner_id"]),
     )
 
@@ -68,9 +76,17 @@ async def _close_with_refund(conn: Conn, row, status: str, now: int) -> bool:
     stake = int(row["stake"])
     if stake > 0:
         await repo.change_balance(conn, int(row["challenger_id"]), stake, now)
-        await repo.add_ledger(conn, int(row["challenger_id"]), "pvp_refund", stake, now,
-                              counterparty_id=int(row["target_id"]), ref_type="pvp", ref_id=int(row["id"]),
-                              details=status)
+        await repo.add_ledger(
+            conn,
+            int(row["challenger_id"]),
+            "pvp_refund",
+            stake,
+            now,
+            counterparty_id=int(row["target_id"]),
+            ref_type="pvp",
+            ref_id=int(row["id"]),
+            details=status,
+        )
     return True
 
 
@@ -112,8 +128,16 @@ class PvpService:
             challenge_id = int(cur.lastrowid)
             if stake > 0:
                 await repo.change_balance(conn, challenger_id, -stake, now)
-                await repo.add_ledger(conn, challenger_id, "pvp_escrow", -stake, now, counterparty_id=target_id,
-                                      ref_type="pvp", ref_id=challenge_id)
+                await repo.add_ledger(
+                    conn,
+                    challenger_id,
+                    "pvp_escrow",
+                    -stake,
+                    now,
+                    counterparty_id=target_id,
+                    ref_type="pvp",
+                    ref_id=challenge_id,
+                )
             view = _view(await _get(conn, challenge_id))
         return view
 
@@ -178,8 +202,9 @@ class PvpService:
                 raise StaleAction()
             if stake > 0:
                 await repo.change_balance(conn, b_id, -stake, now)
-                await repo.add_ledger(conn, b_id, "pvp_escrow", -stake, now, counterparty_id=a_id,
-                                      ref_type="pvp", ref_id=challenge_id)
+                await repo.add_ledger(
+                    conn, b_id, "pvp_escrow", -stake, now, counterparty_id=a_id, ref_type="pvp", ref_id=challenge_id
+                )
             spend_energy(a_ship, PVP_ENERGY, now)
             spend_energy(b_ship, PVP_ENERGY, now)
 
@@ -205,14 +230,31 @@ class PvpService:
                 if winner is None:
                     for uid, other in ((a_id, b_id), (b_id, a_id)):
                         await repo.change_balance(conn, uid, stake, now)
-                        await repo.add_ledger(conn, uid, "pvp_refund", stake, now, counterparty_id=other,
-                                              ref_type="pvp", ref_id=challenge_id, details="draw")
+                        await repo.add_ledger(
+                            conn,
+                            uid,
+                            "pvp_refund",
+                            stake,
+                            now,
+                            counterparty_id=other,
+                            ref_type="pvp",
+                            ref_id=challenge_id,
+                            details="draw",
+                        )
                 else:
                     loser = b_id if winner == a_id else a_id
                     await repo.change_balance(conn, winner, 2 * stake, now)
                     await repo.inc_stats(conn, winner, credits_earned=stake)
-                    await repo.add_ledger(conn, winner, "pvp_win", 2 * stake, now, counterparty_id=loser,
-                                          ref_type="pvp", ref_id=challenge_id)
+                    await repo.add_ledger(
+                        conn,
+                        winner,
+                        "pvp_win",
+                        2 * stake,
+                        now,
+                        counterparty_id=loser,
+                        ref_type="pvp",
+                        ref_id=challenge_id,
+                    )
 
             # Ограничение фарма XP: одна пара — не чаще раза в час.
             pair = (min(a_id, b_id), max(a_id, b_id))
@@ -248,10 +290,20 @@ class PvpService:
             )
             view = _view(await _get(conn, challenge_id))
         return DuelResult(
-            challenge=view, status="resolved", challenger_power=a_power, target_power=b_power, winner_id=winner,
-            challenger_damage=a_dmg, target_damage=b_dmg, challenger_hp=a_ship.hp, target_hp=b_ship.hp,
-            challenger_xp=a_xp, target_xp=b_xp, xp_capped=not xp_allowed,
-            challenger_progress=a_prog, target_progress=b_prog,
+            challenge=view,
+            status="resolved",
+            challenger_power=a_power,
+            target_power=b_power,
+            winner_id=winner,
+            challenger_damage=a_dmg,
+            target_damage=b_dmg,
+            challenger_hp=a_ship.hp,
+            target_hp=b_ship.hp,
+            challenger_xp=a_xp,
+            target_xp=b_xp,
+            xp_capped=not xp_allowed,
+            challenger_progress=a_prog,
+            target_progress=b_prog,
         )
 
     async def list_for(self, user_id: int, limit: int = 10) -> list[ChallengeView]:
@@ -272,6 +324,13 @@ class PvpService:
             cur = await conn.execute(f"{_SELECT} WHERE p.status = 'pending' AND p.expires_at <= ?", (now,))
             for row in await cur.fetchall():
                 if await _close_with_refund(conn, row, "expired", now):
-                    notices.append(ExpiredNotice("challenge", int(row["id"]), row["chat_id"], row["message_id"],
-                                                 f"⌛ Вызов #{row['id']} истёк. Ставка возвращена инициатору."))
+                    notices.append(
+                        ExpiredNotice(
+                            "challenge",
+                            int(row["id"]),
+                            row["chat_id"],
+                            row["message_id"],
+                            f"⌛ Вызов #{row['id']} истёк. Ставка возвращена инициатору.",
+                        )
+                    )
         return notices

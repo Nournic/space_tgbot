@@ -57,7 +57,7 @@ async def test_broken_ship_cannot_travel(game):
 async def test_old_travel_keyboard_rejected(game, clock):
     await make_user(game, 1)
     token = await game.tokens.issue(1, 1, "travel", {"from": "earth"})
-    await game.travel.travel(1, "mars")          # переместились командой
+    await game.travel.travel(1, "mars")  # переместились командой
     clock.advance(60)
     with pytest.raises(StaleAction):
-        await game.travel.travel(1, "earth", token=token)   # старая клавиатура с Земли
+        await game.travel.travel(1, "earth", token=token)  # старая клавиатура с Земли

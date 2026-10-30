@@ -5,6 +5,7 @@
 повторный запуск безопасен (уже применённые версии пропускаются).
 Для обновления версии 1.0 добавьте новый элемент в MIGRATIONS.
 """
+
 from __future__ import annotations
 
 import logging
@@ -231,8 +232,7 @@ MIGRATIONS: list[tuple[int, str, list[str]]] = [
 
 def _seed_v1() -> list[tuple[str, tuple]]:
     return [
-        ("INSERT OR IGNORE INTO achievements (id, title, description) VALUES (?, ?, ?)",
-         (a.id, a.title, a.description))
+        ("INSERT OR IGNORE INTO achievements (id, title, description) VALUES (?, ?, ?)", (a.id, a.title, a.description))
         for a in (ACHIEVEMENTS[k] for k in ACHIEVEMENT_ORDER)
     ]
 
@@ -240,7 +240,7 @@ def _seed_v1() -> list[tuple[str, tuple]]:
 SEEDS = {1: _seed_v1}
 
 
-async def current_version(db: "Database") -> int:
+async def current_version(db: Database) -> int:
     conn = await db.connect()
     try:
         cur = await conn.execute("PRAGMA user_version")
@@ -249,14 +249,14 @@ async def current_version(db: "Database") -> int:
         await conn.close()
 
 
-async def apply_migrations(db: "Database") -> int:
+async def apply_migrations(db: Database) -> int:
     version = await current_version(db)
     for target, description, statements in MIGRATIONS:
         if target <= version:
             continue
         async with db.transaction() as conn:
             cur = await conn.execute("PRAGMA user_version")
-            if int((await cur.fetchone())[0]) >= target:   # применено параллельным процессом
+            if int((await cur.fetchone())[0]) >= target:  # применено параллельным процессом
                 continue
             for sql in statements:
                 await conn.execute(sql)

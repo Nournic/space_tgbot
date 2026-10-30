@@ -15,7 +15,7 @@ async def test_mine_success(game, rng, clock):
     _, quests = await game.quests.today(1)
     assert next(q for q in quests if q.quest_id == "daily_mine").progress == 4
     with pytest.raises(GameError, match="Добыча"):
-        await game.mining.mine(1)                       # кулдаун
+        await game.mining.mine(1)  # кулдаун
     clock.advance(30)
     rng.picks, rng.ints = ["water"], [1]
     await game.mining.mine(1)
@@ -36,7 +36,7 @@ async def test_mine_no_space_fails_before_spending(game, rng):
     before = await snapshot(game, 1)
     with pytest.raises(GameError, match="нет места"):
         await game.mining.mine(1)
-    assert await snapshot(game, 1) == before            # ни энергии, ни кулдауна
+    assert await snapshot(game, 1) == before  # ни энергии, ни кулдауна
 
 
 async def test_mine_requires_energy_and_hull(game, clock):
@@ -64,11 +64,11 @@ async def test_craft_failures_change_nothing(game):
     await give_items(game, 1, water=4, spice=1)
     before = await snapshot(game, 1)
     with pytest.raises(ValidationError):
-        await game.crafting.craft(1, "water", 1)        # сырьё без рецепта
+        await game.crafting.craft(1, "water", 1)  # сырьё без рецепта
     with pytest.raises(GameError, match="ингредиентов"):
-        await game.crafting.craft(1, "medicine", 2)     # spice только 1
+        await game.crafting.craft(1, "medicine", 2)  # spice только 1
     with pytest.raises(InsufficientFunds):
-        await game.crafting.craft(1, "medicine", 1)     # работа 10 кр., есть 5
+        await game.crafting.craft(1, "medicine", 1)  # работа 10 кр., есть 5
     with pytest.raises(ValidationError):
         await game.crafting.craft(1, "medicine", 0)
     assert await snapshot(game, 1) == before

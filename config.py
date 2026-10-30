@@ -1,4 +1,5 @@
 """Загрузка настроек из окружения / .env."""
+
 from __future__ import annotations
 
 import os

@@ -1,8 +1,9 @@
 """Общие фикстуры: временная SQLite, управляемые часы и детерминированный RNG."""
+
 from __future__ import annotations
 
 import random
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 
@@ -11,7 +12,7 @@ from app.db.connection import Database
 from app.services import Game, build_game
 
 # 2026-01-15 12:00:00 UTC
-START_TS = int(datetime(2026, 1, 15, 12, 0, tzinfo=timezone.utc).timestamp())
+START_TS = int(datetime(2026, 1, 15, 12, 0, tzinfo=UTC).timestamp())
 SEED = "test-seed"
 
 
@@ -67,8 +68,9 @@ async def game(db_path, clock, rng) -> Game:
     return build_game(db, seed=SEED, clock=clock, rng=rng)
 
 
-async def make_user(game: Game, user_id: int, name: str | None = None, balance: int | None = None,
-                    planet: str | None = None) -> None:
+async def make_user(
+    game: Game, user_id: int, name: str | None = None, balance: int | None = None, planet: str | None = None
+) -> None:
     await game.accounts.register(user_id, name or f"Игрок {user_id}")
     async with game.db.transaction() as conn:
         if balance is not None:
@@ -83,12 +85,24 @@ async def give_items(game: Game, user_id: int, **items: int) -> None:
             await conn.execute(
                 "INSERT INTO inventory (user_id, item_id, quantity) VALUES (?, ?, ?) "
                 "ON CONFLICT(user_id, item_id) DO UPDATE SET quantity = quantity + excluded.quantity",
-                (user_id, item_id, qty))
+                (user_id, item_id, qty),
+            )
 
 
 async def set_ship(game: Game, user_id: int, **fields) -> None:
-    allowed = {"ship_class", "cargo_level", "engine_level", "weapon_level", "armor_level", "hp", "energy",
-               "energy_updated_at", "travel_cooldown_until", "mine_cooldown_until", "hunt_cooldown_until"}
+    allowed = {
+        "ship_class",
+        "cargo_level",
+        "engine_level",
+        "weapon_level",
+        "armor_level",
+        "hp",
+        "energy",
+        "energy_updated_at",
+        "travel_cooldown_until",
+        "mine_cooldown_until",
+        "hunt_cooldown_until",
+    }
     assert set(fields) <= allowed
     async with game.db.transaction() as conn:
         for k, v in fields.items():
@@ -103,13 +117,15 @@ async def snapshot(game: Game, user_id: int) -> dict:
         cur = await conn.execute("SELECT * FROM ships WHERE user_id = ?", (user_id,))
         ship = dict(await cur.fetchone())
         ship.pop("updated_at")
-        cur = await conn.execute("SELECT item_id, quantity FROM inventory WHERE user_id = ? ORDER BY item_id",
-                                 (user_id,))
+        cur = await conn.execute(
+            "SELECT item_id, quantity FROM inventory WHERE user_id = ? ORDER BY item_id", (user_id,)
+        )
         inv = [tuple(r) for r in await cur.fetchall()]
         cur = await conn.execute("SELECT * FROM player_stats WHERE user_id = ?", (user_id,))
         stats = tuple(await cur.fetchone())
-        cur = await conn.execute("SELECT quest_id, progress, claimed FROM user_quests WHERE user_id = ? "
-                                 "ORDER BY quest_id", (user_id,))
+        cur = await conn.execute(
+            "SELECT quest_id, progress, claimed FROM user_quests WHERE user_id = ? " "ORDER BY quest_id", (user_id,)
+        )
         quests = [tuple(r) for r in await cur.fetchall()]
         cur = await conn.execute("SELECT achievement_id FROM user_achievements WHERE user_id = ?", (user_id,))
         ach = sorted(r[0] for r in await cur.fetchall())

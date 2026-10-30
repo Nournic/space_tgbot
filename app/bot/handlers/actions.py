@@ -5,6 +5,7 @@
    действие, поэтому повторное нажатие или старая клавиатура не сработают.
 3. После commit — редактирование сообщения (ошибки Telegram не откатывают действие).
 """
+
 from __future__ import annotations
 
 import re
@@ -103,8 +104,9 @@ async def cb_token(callback: CallbackQuery, callback_data: TokenCB, game: Game) 
     elif action == "clan_disband":
         if choice == "yes":
             view = await game.clans.disband(uid, token=token)
-            await safe_edit(callback.message, f"💥 Клан «{esc(view.name)}» распущен. "
-                                              f"Казна {view.treasury} кр. сгорела.")
+            await safe_edit(
+                callback.message, f"💥 Клан «{esc(view.name)}» распущен. " f"Казна {view.treasury} кр. сгорела."
+            )
             await cb_answer(callback, "Клан распущен")
         else:
             await game.tokens.discard(token, uid, "clan_disband")

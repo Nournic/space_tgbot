@@ -1,8 +1,10 @@
 """Middleware: перевод игровых ошибок в понятные ответы и обновление имени игрока."""
+
 from __future__ import annotations
 
 import logging
-from typing import Any, Awaitable, Callable
+from collections.abc import Awaitable, Callable
+from typing import Any
 
 from aiogram import BaseMiddleware
 from aiogram.exceptions import TelegramAPIError
@@ -49,7 +51,7 @@ class GameMiddleware(BaseMiddleware):
         try:
             if isinstance(event, Message):
                 await event.answer(text)
-            else:   # CallbackQuery: ответ всплывающим уведомлением
+            else:  # CallbackQuery: ответ всплывающим уведомлением
                 await cb_answer(event, text, alert=alert)
         except TelegramAPIError as exc:
             log.debug("error report failed: %s", exc)

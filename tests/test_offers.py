@@ -21,7 +21,7 @@ async def test_reserve_reduces_available_not_cargo(game):
         await game.economy.sell(1, "water", 5)
     await game.economy.sell(1, "water", 4)
     with pytest.raises(GameError):
-        await game.offers.create(1, 2, "water", 1, 0, None)    # всё в резерве
+        await game.offers.create(1, 2, "water", 1, 0, None)  # всё в резерве
 
 
 async def test_cancel_releases_reserve(game):
@@ -45,7 +45,7 @@ async def test_accept_transfers_goods_and_money(game):
     s, b = await game.accounts.profile(1), await game.accounts.profile(2)
     assert s.inventory["water"] == 5 and s.balance == 1200 and s.reserved == {}
     assert b.inventory["water"] == 5 and b.balance == 800
-    assert s.balance + b.balance == 2000                    # P2P не создаёт кредиты
+    assert s.balance + b.balance == 2000  # P2P не создаёт кредиты
     with pytest.raises(StaleAction):
         await game.offers.accept(o.id, 2)
 

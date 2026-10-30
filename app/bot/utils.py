@@ -1,4 +1,5 @@
 """Вспомогательные функции Telegram-слоя: разбор аргументов и безопасные ответы."""
+
 from __future__ import annotations
 
 import logging
@@ -68,7 +69,7 @@ async def cb_answer(callback: CallbackQuery, text: str | None = None, alert: boo
 
 async def safe_edit(message: Message | None, text: str, markup: InlineKeyboardMarkup | None = None) -> None:
     """Редактирует сообщение; ошибки Telegram не отменяют уже совершённое действие."""
-    if message is None or not hasattr(message, "edit_text"):   # InaccessibleMessage — редактировать нельзя
+    if message is None or not hasattr(message, "edit_text"):  # InaccessibleMessage — редактировать нельзя
         return
     try:
         await message.edit_text(text, reply_markup=markup)

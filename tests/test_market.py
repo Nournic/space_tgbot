@@ -33,7 +33,7 @@ def test_prices_within_bounds_and_sell_lower():
                 assert -20 <= dev <= 20
                 b = buy_price(day, planet, item, SEED)
                 assert base * 70 // 100 <= b <= base * 130 // 100
-                assert sell_price(b) < b      # мгновенная перепродажа убыточна
+                assert sell_price(b) < b  # мгновенная перепродажа убыточна
 
 
 async def test_prices_stable_within_day_and_after_restart(db_path, clock, rng):
@@ -41,8 +41,8 @@ async def test_prices_stable_within_day_and_after_restart(db_path, clock, rng):
     await db.init()
     g1 = build_game(db, seed=SEED, clock=clock, rng=rng)
     first = g1.economy.price_table()
-    clock.advance(3600 * 5)        # тот же день UTC (12:00 → 17:00)
-    g2 = build_game(Database(db_path), seed=SEED, clock=clock, rng=rng)   # «перезапуск»
+    clock.advance(3600 * 5)  # тот же день UTC (12:00 → 17:00)
+    g2 = build_game(Database(db_path), seed=SEED, clock=clock, rng=rng)  # «перезапуск»
     assert g2.economy.price_table() == first
 
 

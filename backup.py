@@ -4,12 +4,13 @@
     python backup.py                     # → backups/space_trader-YYYYmmdd-HHMMSS.sqlite3
     python backup.py путь/к/копии.sqlite3
 """
+
 from __future__ import annotations
 
 import os
 import sqlite3
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from dotenv import load_dotenv
 
@@ -21,7 +22,7 @@ def backup(source: str, target: str) -> str:
     src = sqlite3.connect(source, timeout=30)
     dst = sqlite3.connect(target)
     try:
-        src.backup(dst)                                  # постраничная консистентная копия
+        src.backup(dst)  # постраничная консистентная копия
         result = dst.execute("PRAGMA integrity_check").fetchone()[0]
         if result != "ok":
             raise SystemExit(f"Проверка копии не пройдена: {result}")
@@ -34,7 +35,7 @@ def backup(source: str, target: str) -> str:
 def main() -> None:
     load_dotenv()
     source = os.getenv("DATABASE_PATH", "data/space_trader.sqlite3")
-    stamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+    stamp = datetime.now(UTC).strftime("%Y%m%d-%H%M%S")
     target = sys.argv[1] if len(sys.argv) > 1 else os.path.join("backups", f"space_trader-{stamp}.sqlite3")
     print(f"Резервная копия создана: {backup(source, target)}")
 

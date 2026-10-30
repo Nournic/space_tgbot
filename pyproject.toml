@@ -16,6 +16,8 @@ extend-exclude = [".venv", "data", "backups"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP", "SIM"]
+# UP038 (isinstance с X | Y) ruff сам объявил устаревшим.
+ignore = ["UP038"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["app", "config", "tests"]

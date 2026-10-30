@@ -1,8 +1,9 @@
 """Источник времени (подменяется в тестах). Все timestamps — целые UNIX-секунды UTC."""
+
 from __future__ import annotations
 
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Protocol
 
 
@@ -30,8 +31,8 @@ class FixedClock:
 
 def utc_date(ts: int) -> str:
     """Календарная дата UTC в формате YYYY-MM-DD — не зависит от часового пояса машины."""
-    return datetime.fromtimestamp(ts, tz=timezone.utc).strftime("%Y-%m-%d")
+    return datetime.fromtimestamp(ts, tz=UTC).strftime("%Y-%m-%d")
 
 
 def format_utc(ts: int) -> str:
-    return datetime.fromtimestamp(ts, tz=timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    return datetime.fromtimestamp(ts, tz=UTC).strftime("%Y-%m-%d %H:%M UTC")

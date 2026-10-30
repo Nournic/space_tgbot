@@ -1,4 +1,5 @@
 """Точка входа: python main.py"""
+
 from __future__ import annotations
 
 import asyncio
@@ -50,8 +51,9 @@ async def main() -> None:
     if expired:
         log.info("При старте закрыто просроченных объектов: %d", len(expired))
 
-    bot = Bot(settings.bot_token, default=DefaultBotProperties(parse_mode=ParseMode.HTML,
-                                                               link_preview_is_disabled=True))
+    bot = Bot(
+        settings.bot_token, default=DefaultBotProperties(parse_mode=ParseMode.HTML, link_preview_is_disabled=True)
+    )
     dp = setup_dispatcher(game)
     cleanup = asyncio.create_task(cleanup_loop(game, bot))
     try:
@@ -69,7 +71,5 @@ async def main() -> None:
 
 
 if __name__ == "__main__":
-    try:
+    with contextlib.suppress(KeyboardInterrupt, SystemExit):
         asyncio.run(main())
-    except (KeyboardInterrupt, SystemExit):
-        pass

@@ -1,4 +1,5 @@
 """Динамические цены и системный рынок (покупка/продажа)."""
+
 from __future__ import annotations
 
 from app.clock import utc_date
@@ -125,10 +126,21 @@ class EconomyService:
                 used -= weight * qty
                 kind = "market_sell"
                 amount = total
-            await repo.add_ledger(conn, user_id, kind, amount, now, item_id=item_id,
-                                  quantity=qty if op == "buy" else -qty, details=planet)
+            await repo.add_ledger(
+                conn, user_id, kind, amount, now, item_id=item_id, quantity=qty if op == "buy" else -qty, details=planet
+            )
             await progression.add_xp(conn, user_id, XP_TRADE, now, progress)
             await progression.check_achievements(conn, user_id, now, progress)
             owned = (await repo.get_inventory(conn, user_id)).get(item_id, 0)
-        return TradeResult(op=op, item_id=item_id, quantity=qty, unit_price=unit, total=total,
-                           balance=balance, cargo_used=used, capacity=capacity, owned=owned, progress=progress)
+        return TradeResult(
+            op=op,
+            item_id=item_id,
+            quantity=qty,
+            unit_price=unit,
+            total=total,
+            balance=balance,
+            cargo_used=used,
+            capacity=capacity,
+            owned=owned,
+            progress=progress,
+        )

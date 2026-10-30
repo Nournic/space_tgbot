@@ -1,4 +1,5 @@
 """Корабль и ресурсы: /ship, /shipyard, /upgrade, /repair, /mine, /recipes, /craft."""
+
 from __future__ import annotations
 
 from aiogram import Router
@@ -35,8 +36,10 @@ async def cmd_ship(message: Message, game: Game) -> None:
 
 # ----------------------------------------------------------------- верфь
 def purchase_text(r: ShipPurchaseResult) -> str:
-    return (f"🚀 Новый корпус «<b>{SHIP_CLASSES[r.ship_class].name}</b>» за {r.cost} кр.!\n"
-            f"❤️ HP {r.hp}, 📦 трюм {r.capacity}, 💰 баланс {r.balance}")
+    return (
+        f"🚀 Новый корпус «<b>{SHIP_CLASSES[r.ship_class].name}</b>» за {r.cost} кр.!\n"
+        f"❤️ HP {r.hp}, 📦 трюм {r.capacity}, 💰 баланс {r.balance}"
+    )
 
 
 async def render_shipyard(game: Game, user_id: int, chat_id: int | None):
@@ -65,13 +68,17 @@ async def render_upgrades(game: Game, user_id: int, chat_id: int | None, prefix:
     p = await game.accounts.profile(user_id)
     levels = {m: p.ship.module_level(m) for m in MODULE_ORDER}
     costs = {m: upgrade_cost(levels[m] + 1) for m in MODULE_ORDER if levels[m] < MODULE_MAX_LEVEL}
-    lines = [prefix + "🔧 <b>Улучшения модулей</b> (уровни 0–5, переход на n стоит 500 × n)",
-             f"💰 Баланс: {p.balance}", "",
-             f"{MODULES['cargo']}: {levels['cargo']} (+10 трюма/ур.)",
-             f"{MODULES['engine']}: {levels['engine']} (−1 энергии перелёта/ур., минимум 5)",
-             f"{MODULES['weapon']}: {levels['weapon']} (+4 к силе/ур.)",
-             f"{MODULES['armor']}: {levels['armor']} (+25 макс. HP и −2 урона/ур.)",
-             "", "Команда: <code>/upgrade engine</code>"]
+    lines = [
+        prefix + "🔧 <b>Улучшения модулей</b> (уровни 0–5, переход на n стоит 500 × n)",
+        f"💰 Баланс: {p.balance}",
+        "",
+        f"{MODULES['cargo']}: {levels['cargo']} (+10 трюма/ур.)",
+        f"{MODULES['engine']}: {levels['engine']} (−1 энергии перелёта/ур., минимум 5)",
+        f"{MODULES['weapon']}: {levels['weapon']} (+4 к силе/ур.)",
+        f"{MODULES['armor']}: {levels['armor']} (+25 макс. HP и −2 урона/ур.)",
+        "",
+        "Команда: <code>/upgrade engine</code>",
+    ]
     token = await game.tokens.issue(user_id, chat_id, "upgrade")
     return "\n".join(lines), upgrade_kb(token, levels, costs)
 
@@ -118,8 +125,10 @@ async def cmd_repair(message: Message, command: CommandObject, game: Game) -> No
 
 # ----------------------------------------------------------------- добыча
 def mine_text(r: MineResult) -> str:
-    return (f"⛏ Добыто: <b>{r.quantity} × {item_title(r.item_id)}</b>\n"
-            f"🔋 Осталось {r.energy_left} | 📦 {r.cargo_used}/{r.capacity}{progress_lines(r.progress)}")
+    return (
+        f"⛏ Добыто: <b>{r.quantity} × {item_title(r.item_id)}</b>\n"
+        f"🔋 Осталось {r.energy_left} | 📦 {r.cargo_used}/{r.capacity}{progress_lines(r.progress)}"
+    )
 
 
 async def mine_again_kb(game: Game, user_id: int, chat_id: int | None):
@@ -130,8 +139,9 @@ async def mine_again_kb(game: Game, user_id: int, chat_id: int | None):
 @router.message(Command("mine"))
 async def cmd_mine(message: Message, game: Game) -> None:
     result = await game.mining.mine(message.from_user.id)
-    await message.answer(mine_text(result), reply_markup=await mine_again_kb(game, message.from_user.id,
-                                                                             message.chat.id))
+    await message.answer(
+        mine_text(result), reply_markup=await mine_again_kb(game, message.from_user.id, message.chat.id)
+    )
 
 
 # ----------------------------------------------------------------- крафт
@@ -142,16 +152,20 @@ async def cmd_recipes(message: Message) -> None:
 
 def craft_text(r: CraftResult) -> str:
     used = ", ".join(f"{q} {item_title(i)}" for i, q in r.consumed.items())
-    return (f"🛠 Произведено: <b>{r.quantity} × {item_title(r.item_id)}</b>\n"
-            f"Израсходовано: {used}; работа {r.fee} кр. 💰 Баланс: {r.balance}{progress_lines(r.progress)}")
+    return (
+        f"🛠 Произведено: <b>{r.quantity} × {item_title(r.item_id)}</b>\n"
+        f"Израсходовано: {used}; работа {r.fee} кр. 💰 Баланс: {r.balance}{progress_lines(r.progress)}"
+    )
 
 
 @router.message(Command("craft"))
 async def cmd_craft(message: Message, command: CommandObject, game: Game) -> None:
     args = split_args(command.args)
     if not args or len(args) > 2:
-        raise ValidationError("✍️ Формат: <code>/craft &lt;товар&gt; [количество]</code>, например "
-                              "<code>/craft fuel_cell 3</code>. Рецепты: /recipes")
+        raise ValidationError(
+            "✍️ Формат: <code>/craft &lt;товар&gt; [количество]</code>, например "
+            "<code>/craft fuel_cell 3</code>. Рецепты: /recipes"
+        )
     item_id = validate_recipe(args[0])
     qty = parse_int(args[1], "количество", 1, MAX_CRAFT_QTY) if len(args) == 2 else 1
     ingredients = ", ".join(f"{q * qty} {item_title(i)}" for i, q in RECIPES[item_id].items())

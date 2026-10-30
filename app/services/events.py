@@ -1,4 +1,5 @@
 """Глобальные мировые события: одно на календарные сутки UTC, стабильно по дате и seed."""
+
 from __future__ import annotations
 
 import hashlib

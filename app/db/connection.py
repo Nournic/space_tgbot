@@ -5,12 +5,13 @@
 конкурентные операции сериализуются, а не перемежаются. Соединение никогда не
 разделяется между задачами asyncio.
 """
+
 from __future__ import annotations
 
 import logging
 import os
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from typing import AsyncIterator
 
 import aiosqlite
 

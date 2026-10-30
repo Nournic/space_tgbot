@@ -1,4 +1,5 @@
 """Общий контекст сервисов и операции над состоянием корабля (энергия, кулдауны)."""
+
 from __future__ import annotations
 
 import random
@@ -66,8 +67,16 @@ async def save_ship(conn: Conn, ship: ShipState, now: int) -> None:
     await conn.execute(
         "UPDATE ships SET energy = ?, energy_updated_at = ?, hp = ?, travel_cooldown_until = ?, "
         "mine_cooldown_until = ?, hunt_cooldown_until = ?, updated_at = ? WHERE user_id = ?",
-        (ship.energy, ship.energy_anchor, ship.hp, ship.travel_cooldown_until,
-         ship.mine_cooldown_until, ship.hunt_cooldown_until, now, ship.user_id),
+        (
+            ship.energy,
+            ship.energy_anchor,
+            ship.hp,
+            ship.travel_cooldown_until,
+            ship.mine_cooldown_until,
+            ship.hunt_cooldown_until,
+            now,
+            ship.user_id,
+        ),
     )
 
 
@@ -81,7 +90,7 @@ def spend_energy(ship: ShipState, amount: int, now: int) -> None:
             f"Восстановится примерно через {format_duration(eta)}."
         )
     if ship.energy >= MAX_ENERGY:
-        ship.energy_anchor = now      # отсчёт регенерации начинается с момента расхода
+        ship.energy_anchor = now  # отсчёт регенерации начинается с момента расхода
     ship.energy -= amount
 
 

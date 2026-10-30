@@ -6,6 +6,7 @@ available = total − SUM(qty активных предложений) умен�
 же транзакции товар списывается у продавца и зачисляется покупателю, деньги
 переходят от покупателя к продавцу. P2P не создаёт и не уничтожает кредиты.
 """
+
 from __future__ import annotations
 
 from app.constants import ITEMS, MAX_PRICE, OFFER_TTL
@@ -25,11 +26,19 @@ _SELECT = (
 
 def _view(row) -> OfferView:
     return OfferView(
-        id=int(row["id"]), seller_id=int(row["seller_id"]), seller_name=row["seller_name"],
-        buyer_id=int(row["buyer_id"]), buyer_name=row["buyer_name"], item_id=row["item_id"],
-        quantity=int(row["quantity"]), price=int(row["price"]), status=row["status"],
-        created_at=int(row["created_at"]), expires_at=int(row["expires_at"]),
-        chat_id=row["chat_id"], message_id=row["message_id"],
+        id=int(row["id"]),
+        seller_id=int(row["seller_id"]),
+        seller_name=row["seller_name"],
+        buyer_id=int(row["buyer_id"]),
+        buyer_name=row["buyer_name"],
+        item_id=row["item_id"],
+        quantity=int(row["quantity"]),
+        price=int(row["price"]),
+        status=row["status"],
+        created_at=int(row["created_at"]),
+        expires_at=int(row["expires_at"]),
+        chat_id=row["chat_id"],
+        message_id=row["message_id"],
     )
 
 
@@ -53,8 +62,9 @@ class OfferService:
     def __init__(self, ctx: ServiceContext) -> None:
         self.ctx = ctx
 
-    async def create(self, seller_id: int, buyer_id: int, item_id: str, qty: int, price: int,
-                     chat_id: int | None) -> OfferView:
+    async def create(
+        self, seller_id: int, buyer_id: int, item_id: str, qty: int, price: int, chat_id: int | None
+    ) -> OfferView:
         item_id = validate_item(item_id)
         validate_qty(qty)
         if isinstance(price, bool) or not isinstance(price, int) or price < 0 or price > MAX_PRICE:
@@ -67,8 +77,10 @@ class OfferService:
             await repo.require_other_user(conn, buyer_id)
             available = await repo.available_quantity(conn, seller_id, item_id, now)
             if available < qty:
-                raise GameError(f"📦 Доступно только {max(0, available)} × {ITEMS[item_id].title} "
-                                "(с учётом резерва других предложений).")
+                raise GameError(
+                    f"📦 Доступно только {max(0, available)} × {ITEMS[item_id].title} "
+                    "(с учётом резерва других предложений)."
+                )
             cur = await conn.execute(
                 "INSERT INTO trade_offers (seller_id, buyer_id, item_id, quantity, price, status, chat_id, "
                 "created_at, expires_at) VALUES (?, ?, ?, ?, ?, 'pending', ?, ?, ?)",
@@ -117,10 +129,30 @@ class OfferService:
             if price > 0:
                 await repo.change_balance(conn, buyer, -price, now)
                 await progression.earn(conn, seller, price, now)
-            await repo.add_ledger(conn, buyer, "p2p_buy", -price, now, item_id=item_id, quantity=qty,
-                                  counterparty_id=seller, ref_type="offer", ref_id=offer_id)
-            await repo.add_ledger(conn, seller, "p2p_sell", price, now, item_id=item_id, quantity=-qty,
-                                  counterparty_id=buyer, ref_type="offer", ref_id=offer_id)
+            await repo.add_ledger(
+                conn,
+                buyer,
+                "p2p_buy",
+                -price,
+                now,
+                item_id=item_id,
+                quantity=qty,
+                counterparty_id=seller,
+                ref_type="offer",
+                ref_id=offer_id,
+            )
+            await repo.add_ledger(
+                conn,
+                seller,
+                "p2p_sell",
+                price,
+                now,
+                item_id=item_id,
+                quantity=-qty,
+                counterparty_id=buyer,
+                ref_type="offer",
+                ref_id=offer_id,
+            )
             sp, bp = Progress(), Progress()
             await progression.check_achievements(conn, seller, now, sp)
             await progression.check_achievements(conn, buyer, now, bp)
@@ -155,11 +187,13 @@ class OfferService:
             await repo.require_user(conn, user_id)
             cur = await conn.execute(
                 f"{_SELECT} WHERE o.buyer_id = ? AND o.status = 'pending' AND o.expires_at > ? ORDER BY o.id DESC",
-                (user_id, now))
+                (user_id, now),
+            )
             incoming = [_view(r) for r in await cur.fetchall()]
             cur = await conn.execute(
                 f"{_SELECT} WHERE o.seller_id = ? AND o.status = 'pending' AND o.expires_at > ? ORDER BY o.id DESC",
-                (user_id, now))
+                (user_id, now),
+            )
             outgoing = [_view(r) for r in await cur.fetchall()]
         return incoming, outgoing
 
@@ -168,10 +202,17 @@ class OfferService:
         async with self.ctx.db.transaction() as conn:
             now = self.ctx.clock.now()
             cur = await conn.execute(
-                "SELECT id, chat_id, message_id FROM trade_offers WHERE status = 'pending' AND expires_at <= ?",
-                (now,))
+                "SELECT id, chat_id, message_id FROM trade_offers WHERE status = 'pending' AND expires_at <= ?", (now,)
+            )
             for row in await cur.fetchall():
                 if await _set_status(conn, int(row["id"]), "expired", now):
-                    notices.append(ExpiredNotice("offer", int(row["id"]), row["chat_id"], row["message_id"],
-                                                 f"⌛ Предложение #{row['id']} истекло, резерв товара снят."))
+                    notices.append(
+                        ExpiredNotice(
+                            "offer",
+                            int(row["id"]),
+                            row["chat_id"],
+                            row["message_id"],
+                            f"⌛ Предложение #{row['id']} истекло, резерв товара снят.",
+                        )
+                    )
         return notices

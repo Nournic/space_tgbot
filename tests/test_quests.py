@@ -37,12 +37,12 @@ async def test_travel_quest_and_new_day_reset(game, clock):
     await game.travel.travel(1, "earth")
     await game.quests.claim(1, "daily_travel")
     old_token = await game.tokens.issue(1, None, "quests", {"date": "2026-01-15"})
-    clock.advance(12 * 3600)                     # следующие сутки UTC
+    clock.advance(12 * 3600)  # следующие сутки UTC
     _, quests = await game.quests.today(1)
     assert all(q.progress == 0 and not q.claimed for q in quests)
     with pytest.raises(GameError, match="не выполнено"):
         await game.quests.claim(1, "daily_travel")
-    with pytest.raises(StaleAction):              # вчерашняя кнопка
+    with pytest.raises(StaleAction):  # вчерашняя кнопка
         await game.quests.claim(1, "daily_travel", token=old_token)
 
 

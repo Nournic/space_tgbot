@@ -5,6 +5,7 @@
   обеспечивает статусная машина в БД, права — buyer/target/инициатор.
 * NavCB — read-only навигация; owner=0 — кнопка общая.
 """
+
 from __future__ import annotations
 
 from aiogram.filters.callback_data import CallbackData
@@ -21,12 +22,12 @@ class TokenCB(CallbackData, prefix="tk"):
 
 
 class OfferCB(CallbackData, prefix="of"):
-    action: str        # a — принять, d — отклонить, c — отменить
+    action: str  # a — принять, d — отклонить, c — отменить
     offer_id: int
 
 
 class DuelCB(CallbackData, prefix="du"):
-    action: str        # a — принять, d — отклонить, c — отменить
+    action: str  # a — принять, d — отклонить, c — отменить
     challenge_id: int
 
 
@@ -104,22 +105,39 @@ def quests_kb(token: str, quests: list[QuestView]) -> InlineKeyboardMarkup | Non
 
 
 def offer_kb(offer_id: int) -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="✅ Принять", callback_data=OfferCB(action="a", offer_id=offer_id).pack()),
-         InlineKeyboardButton(text="❌ Отклонить", callback_data=OfferCB(action="d", offer_id=offer_id).pack())],
-        [InlineKeyboardButton(text="🚫 Отменить (продавец)",
-                              callback_data=OfferCB(action="c", offer_id=offer_id).pack())],
-    ])
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(text="✅ Принять", callback_data=OfferCB(action="a", offer_id=offer_id).pack()),
+                InlineKeyboardButton(text="❌ Отклонить", callback_data=OfferCB(action="d", offer_id=offer_id).pack()),
+            ],
+            [
+                InlineKeyboardButton(
+                    text="🚫 Отменить (продавец)", callback_data=OfferCB(action="c", offer_id=offer_id).pack()
+                )
+            ],
+        ]
+    )
 
 
 def duel_kb(challenge_id: int) -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="⚔️ Принять", callback_data=DuelCB(action="a", challenge_id=challenge_id).pack()),
-         InlineKeyboardButton(text="❌ Отклонить",
-                              callback_data=DuelCB(action="d", challenge_id=challenge_id).pack())],
-        [InlineKeyboardButton(text="🚫 Отменить (инициатор)",
-                              callback_data=DuelCB(action="c", challenge_id=challenge_id).pack())],
-    ])
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="⚔️ Принять", callback_data=DuelCB(action="a", challenge_id=challenge_id).pack()
+                ),
+                InlineKeyboardButton(
+                    text="❌ Отклонить", callback_data=DuelCB(action="d", challenge_id=challenge_id).pack()
+                ),
+            ],
+            [
+                InlineKeyboardButton(
+                    text="🚫 Отменить (инициатор)", callback_data=DuelCB(action="c", challenge_id=challenge_id).pack()
+                )
+            ],
+        ]
+    )
 
 
 def pager_kb(view: str, owner: int, page: int, pages: int) -> InlineKeyboardMarkup | None:
@@ -136,13 +154,17 @@ def pager_kb(view: str, owner: int, page: int, pages: int) -> InlineKeyboardMark
 
 def top_kb(active: str) -> InlineKeyboardMarkup:
     labels = (("balance", "💰"), ("xp", "⭐"), ("pve", "☠️"), ("pvp", "⚔️"), ("clans", "🏰"))
-    return InlineKeyboardMarkup(inline_keyboard=[[
-        nav_button(("• " if key == active else "") + emoji, "tp", 0, key) for key, emoji in labels
-    ]])
+    return InlineKeyboardMarkup(
+        inline_keyboard=[[nav_button(("• " if key == active else "") + emoji, "tp", 0, key) for key, emoji in labels]]
+    )
 
 
 def disband_kb(token: str) -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup(inline_keyboard=[[
-        token_button("💥 Да, распустить", token, "yes"),
-        token_button("Отмена", token, "no"),
-    ]])
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                token_button("💥 Да, распустить", token, "yes"),
+                token_button("Отмена", token, "no"),
+            ]
+        ]
+    )

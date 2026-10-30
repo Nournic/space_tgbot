@@ -1,4 +1,5 @@
 """Карта и перелёты: /map, /travel."""
+
 from __future__ import annotations
 
 from aiogram import Router
@@ -32,16 +33,20 @@ async def render_travel(game: Game, user_id: int, chat_id: int | None, prefix: s
     cd = p.ship.travel_cooldown_until - now
     cd_line = f"\n⏱ Перелёт доступен через {format_duration(cd)}" if cd > 0 else ""
     token = await game.tokens.issue(user_id, chat_id, "travel", {"from": here})
-    text = (f"{prefix}{map_overview(here)}\n\n"
-            f"Вы на: <b>{planet_title(here)}</b> | 🔋 {p.ship.energy}/100 | ❤️ {p.ship.hp}/{p.ship.max_hp}{cd_line}\n"
-            "Куда летим? (стоимость в энергии с учётом двигателя)")
+    text = (
+        f"{prefix}{map_overview(here)}\n\n"
+        f"Вы на: <b>{planet_title(here)}</b> | 🔋 {p.ship.energy}/100 | ❤️ {p.ship.hp}/{p.ship.max_hp}{cd_line}\n"
+        "Куда летим? (стоимость в энергии с учётом двигателя)"
+    )
     return text, travel_kb(token, costs)
 
 
 def travel_result_text(r: TravelResult) -> str:
-    return (f"🚀 Перелёт {planet_title(r.from_planet)} → <b>{planet_title(r.to_planet)}</b> завершён!\n"
-            f"🔋 −{r.energy_cost}, осталось {r.energy_left}. Следующий перелёт через 60 сек."
-            f"{progress_lines(r.progress)}\n\nОткройте /market, чтобы торговать.")
+    return (
+        f"🚀 Перелёт {planet_title(r.from_planet)} → <b>{planet_title(r.to_planet)}</b> завершён!\n"
+        f"🔋 −{r.energy_cost}, осталось {r.energy_left}. Следующий перелёт через 60 сек."
+        f"{progress_lines(r.progress)}\n\nОткройте /market, чтобы торговать."
+    )
 
 
 @router.message(Command("map"))

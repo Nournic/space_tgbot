@@ -1,4 +1,5 @@
 """PvP-дуэли: /challenge (ответом на сообщение), /duels и кнопки вызова."""
+
 from __future__ import annotations
 
 from aiogram import Router
@@ -14,8 +15,13 @@ from app.services import Game
 
 router = Router(name="pvp")
 
-STATUS_RU = {"pending": "⏳ ждёт", "resolved": "⚔️ состоялся", "declined": "❌ отклонён",
-             "cancelled": "🚫 отменён", "expired": "⌛ истёк"}
+STATUS_RU = {
+    "pending": "⏳ ждёт",
+    "resolved": "⚔️ состоялся",
+    "declined": "❌ отклонён",
+    "cancelled": "🚫 отменён",
+    "expired": "⌛ истёк",
+}
 
 
 @router.message(Command("challenge"))
@@ -47,7 +53,9 @@ async def cmd_duels(message: Message, game: Game) -> None:
         other = (c.target_id, c.target_name) if c.challenger_id == uid else (c.challenger_id, c.challenger_name)
         result = ""
         if c.status == "resolved":
-            result = " · 🤝 ничья" if c.winner_id is None else (" · 🏆 победа" if c.winner_id == uid else " · 🩸 поражение")
+            result = (
+                " · 🤝 ничья" if c.winner_id is None else (" · 🏆 победа" if c.winner_id == uid else " · 🩸 поражение")
+            )
         lines.append(f"#{c.id} {role} {mention(*other)} · ставка {c.stake} · {STATUS_RU[c.status]}{result}")
     await message.answer("\n".join(lines))
 

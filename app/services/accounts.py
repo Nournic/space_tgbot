@@ -1,4 +1,5 @@
 """Регистрация, профиль, инвентарь, история операций и одноразовые токены."""
+
 from __future__ import annotations
 
 import json
@@ -110,9 +111,19 @@ class AccountService:
                 (user_id, HISTORY_PAGE_SIZE, page * HISTORY_PAGE_SIZE),
             )
             rows = await cur.fetchall()
-        entries = [LedgerEntry(int(r["id"]), r["kind"], int(r["amount"]), int(r["balance_after"]), r["item_id"],
-                               None if r["quantity"] is None else int(r["quantity"]), r["details"],
-                               int(r["created_at"])) for r in rows]
+        entries = [
+            LedgerEntry(
+                int(r["id"]),
+                r["kind"],
+                int(r["amount"]),
+                int(r["balance_after"]),
+                r["item_id"],
+                None if r["quantity"] is None else int(r["quantity"]),
+                r["details"],
+                int(r["created_at"]),
+            )
+            for r in rows
+        ]
         return HistoryPage(entries=entries, page=page, pages=pages, total=total)
 
 
@@ -122,8 +133,14 @@ class TokenService:
     def __init__(self, ctx: ServiceContext) -> None:
         self.ctx = ctx
 
-    async def issue(self, user_id: int, chat_id: int | None, action: str, payload: dict[str, Any] | None = None,
-                    ttl: int = TOKEN_TTL) -> str:
+    async def issue(
+        self,
+        user_id: int,
+        chat_id: int | None,
+        action: str,
+        payload: dict[str, Any] | None = None,
+        ttl: int = TOKEN_TTL,
+    ) -> str:
         async with self.ctx.db.transaction() as conn:
             return await repo.create_token(conn, user_id, chat_id, action, payload or {}, self.ctx.clock.now(), ttl)
 

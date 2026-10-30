@@ -1,4 +1,5 @@
 """Кланы: /clan и подкоманды."""
+
 from __future__ import annotations
 
 from aiogram import F, Router

@@ -3,6 +3,7 @@
 Функции вызываются внутри транзакции бизнес-операции, поэтому награды,
 счётчики и прогресс фиксируются или откатываются вместе с ней.
 """
+
 from __future__ import annotations
 
 from app.clock import utc_date
@@ -88,11 +89,13 @@ async def achievement_statuses(conn: Conn, user_id: int) -> list[AchievementStat
     result = []
     for ach_id in ACHIEVEMENT_ORDER:
         ach = ACHIEVEMENTS[ach_id]
-        result.append(AchievementStatus(
-            achievement_id=ach_id,
-            earned=ach_id in earned,
-            current=min(values.get(ach.stat, 0), ach.target),
-            target=ach.target,
-            earned_at=earned.get(ach_id),
-        ))
+        result.append(
+            AchievementStatus(
+                achievement_id=ach_id,
+                earned=ach_id in earned,
+                current=min(values.get(ach.stat, 0), ach.target),
+                target=ach.target,
+                earned_at=earned.get(ach_id),
+            )
+        )
     return result

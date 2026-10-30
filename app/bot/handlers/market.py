@@ -1,4 +1,5 @@
 """Рынок: /market, /prices, /buy, /sell и навигация по товарам."""
+
 from __future__ import annotations
 
 from aiogram import F, Router
@@ -29,19 +30,23 @@ async def render_item_card(game: Game, user_id: int, chat_id: int | None, item_i
     available = p.inventory.get(item_id, 0) - p.reserved.get(item_id, 0)
     token = await game.tokens.issue(user_id, chat_id, "market", {"planet": p.planet_id, "item": item_id})
     header = note + "\n\n" if note else ""
-    text = (f"{header}"
-            f"🏪 {planet_title(p.planet_id)} — <b>{item_title(item_id)}</b>\n"
-            f"Покупка: <b>{buy}</b> кр. | Продажа: <b>{sell}</b> кр. | Вес: {ITEMS[item_id].weight}\n"
-            f"У вас: {p.inventory.get(item_id, 0)} (доступно {max(0, available)})\n"
-            f"💰 {p.balance} кр. | 📦 {p.cargo_used}/{p.ship.capacity}")
+    text = (
+        f"{header}"
+        f"🏪 {planet_title(p.planet_id)} — <b>{item_title(item_id)}</b>\n"
+        f"Покупка: <b>{buy}</b> кр. | Продажа: <b>{sell}</b> кр. | Вес: {ITEMS[item_id].weight}\n"
+        f"У вас: {p.inventory.get(item_id, 0)} (доступно {max(0, available)})\n"
+        f"💰 {p.balance} кр. | 📦 {p.cargo_used}/{p.ship.capacity}"
+    )
     return text, market_item_kb(user_id, token)
 
 
 def trade_text(r: TradeResult) -> str:
     verb = "🛒 Куплено" if r.op == "buy" else "💵 Продано"
-    return (f"{verb}: <b>{r.quantity} × {item_title(r.item_id)}</b> по {r.unit_price} = <b>{r.total}</b> кр.\n"
-            f"💰 Баланс: {r.balance} | 📦 Трюм: {r.cargo_used}/{r.capacity} | на борту: {r.owned}"
-            f"{progress_lines(r.progress)}")
+    return (
+        f"{verb}: <b>{r.quantity} × {item_title(r.item_id)}</b> по {r.unit_price} = <b>{r.total}</b> кр.\n"
+        f"💰 Баланс: {r.balance} | 📦 Трюм: {r.cargo_used}/{r.capacity} | на борту: {r.owned}"
+        f"{progress_lines(r.progress)}"
+    )
 
 
 @router.message(Command("market"))
@@ -74,8 +79,10 @@ async def cb_market_item(callback: CallbackQuery, callback_data: NavCB, game: Ga
 def _parse_trade_args(command: CommandObject, verb: str) -> tuple[str, int]:
     args = split_args(command.args)
     if len(args) != 2:
-        raise ValidationError(f"✍️ Формат: <code>/{verb} &lt;товар&gt; &lt;количество&gt;</code>, "
-                              f"например <code>/{verb} water 5</code>")
+        raise ValidationError(
+            f"✍️ Формат: <code>/{verb} &lt;товар&gt; &lt;количество&gt;</code>, "
+            f"например <code>/{verb} water 5</code>"
+        )
     return parse_item(args[0]), parse_int(args[1], "количество", 1, MAX_QTY)
 
 
@@ -96,7 +103,7 @@ async def cmd_sell(message: Message, command: CommandObject, game: Game) -> None
 def _prices_page(game: Game, page: int) -> tuple[str, int, int]:
     pages = -(-len(ITEM_ORDER) // PRICES_PAGE_SIZE)
     page = max(0, min(page, pages - 1))
-    items = list(ITEM_ORDER[page * PRICES_PAGE_SIZE:(page + 1) * PRICES_PAGE_SIZE])
+    items = list(ITEM_ORDER[page * PRICES_PAGE_SIZE : (page + 1) * PRICES_PAGE_SIZE])
     text = prices_text(game.economy.price_table(), items, page, pages, utc_date(game.ctx.clock.now()))
     return text, page, pages
 

@@ -5,6 +5,7 @@
 * PvE: игрок побеждает при атаке >= силы пирата (ничья — в пользу игрока).
 * Урон по кораблю = max(1, базовый − 2 × броня); HP не опускается ниже 0.
 """
+
 from __future__ import annotations
 
 import random
@@ -32,8 +33,12 @@ from app.services.base import ServiceContext, load_ship, require_cooldown, requi
 
 
 def attack_power(ship: ShipState, rng: random.Random) -> int:
-    return (PLAYER_BASE_POWER + WEAPON_PER_LEVEL * ship.weapon_level
-            + SHIP_CLASSES[ship.ship_class].combat_bonus + rng.randint(POWER_ROLL_MIN, POWER_ROLL_MAX))
+    return (
+        PLAYER_BASE_POWER
+        + WEAPON_PER_LEVEL * ship.weapon_level
+        + SHIP_CLASSES[ship.ship_class].combat_bonus
+        + rng.randint(POWER_ROLL_MIN, POWER_ROLL_MAX)
+    )
 
 
 def mitigate(base_damage: int, armor_level: int) -> int:
@@ -87,7 +92,14 @@ class CombatService:
                 await repo.inc_stats(conn, user_id, pve_losses=1)
             await progression.add_xp(conn, user_id, xp, now, progress)
             await progression.check_achievements(conn, user_id, now, progress)
-            await repo.add_ledger(conn, user_id, "pve_win" if won else "pve_loss", reward, now,
-                                  details=f"{enemy.id}: {player_power} vs {enemy_power}, -{damage} HP")
-        return HuntResult(enemy.id, player_power, enemy_power, won, reward, damage, ship.hp, ship.max_hp,
-                          ship.energy, progress)
+            await repo.add_ledger(
+                conn,
+                user_id,
+                "pve_win" if won else "pve_loss",
+                reward,
+                now,
+                details=f"{enemy.id}: {player_power} vs {enemy_power}, -{damage} HP",
+            )
+        return HuntResult(
+            enemy.id, player_power, enemy_power, won, reward, damage, ship.hp, ship.max_hp, ship.energy, progress
+        )

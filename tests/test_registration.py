@@ -36,7 +36,7 @@ async def test_register_updates_display_name_and_escaping_source(game):
     await game.accounts.register(1, "Old")
     await game.accounts.touch_name(1, "<b>New</b>   name")
     p = await game.accounts.profile(1)
-    assert p.display_name == "<b>New</b> name"   # хранится как есть, экранируется при выводе
+    assert p.display_name == "<b>New</b> name"  # хранится как есть, экранируется при выводе
 
 
 async def test_unregistered_user_errors(game):
@@ -49,7 +49,7 @@ async def test_unregistered_user_errors(game):
 async def test_migrations_create_schema_and_are_repeatable(db_path):
     db = Database(db_path)
     assert await db.init() == MIGRATIONS[-1][0]
-    assert await db.init() == MIGRATIONS[-1][0]          # повторный запуск безопасен
+    assert await db.init() == MIGRATIONS[-1][0]  # повторный запуск безопасен
     assert await current_version(db) == MIGRATIONS[-1][0]
     async with db.read() as conn:
         cur = await conn.execute("SELECT name FROM sqlite_master WHERE type = 'table'")
@@ -62,8 +62,21 @@ async def test_migrations_create_schema_and_are_repeatable(db_path):
         assert (await cur.fetchone())[0] == 1
         cur = await conn.execute("PRAGMA journal_mode")
         assert (await cur.fetchone())[0] == "wal"
-    for t in ("users", "ships", "inventory", "trade_offers", "pvp_challenges", "user_quests", "achievements",
-              "user_achievements", "player_stats", "clans", "clan_members", "action_tokens", "ledger"):
+    for t in (
+        "users",
+        "ships",
+        "inventory",
+        "trade_offers",
+        "pvp_challenges",
+        "user_quests",
+        "achievements",
+        "user_achievements",
+        "player_stats",
+        "clans",
+        "clan_members",
+        "action_tokens",
+        "ledger",
+    ):
         assert t in tables
 
 
@@ -83,4 +96,4 @@ async def test_db_constraints(game):
             await conn.execute("UPDATE ships SET energy = 101 WHERE user_id = 1")
     with pytest.raises(sqlite3.IntegrityError):
         async with game.db.transaction() as conn:
-            await conn.execute("UPDATE users SET xp = 250, level = 1 WHERE user_id = 1")   # level = 1 + xp/100
+            await conn.execute("UPDATE users SET xp = 250, level = 1 WHERE user_id = 1")  # level = 1 + xp/100

@@ -1,4 +1,5 @@
 """Типизированные DTO и результаты сервисов (без зависимостей от Telegram)."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -82,6 +83,7 @@ class RegisterResult:
 @dataclass
 class Progress:
     """Побочные эффекты прогрессии, накопленные за одну операцию."""
+
     xp_gained: int = 0
     old_level: int = 0
     new_level: int = 0
@@ -101,7 +103,7 @@ class Progress:
 
 @dataclass
 class TradeResult:
-    op: str                 # buy | sell
+    op: str  # buy | sell
     item_id: str
     quantity: int
     unit_price: int
@@ -203,6 +205,7 @@ class OfferView:
 @dataclass
 class OfferOutcome:
     """Результат действия с предложением. status — итоговый статус оффера."""
+
     offer: OfferView
     status: str
     seller_progress: Progress | None = None
@@ -228,10 +231,10 @@ class ChallengeView:
 @dataclass
 class DuelResult:
     challenge: ChallengeView
-    status: str                       # resolved | expired
+    status: str  # resolved | expired
     challenger_power: int = 0
     target_power: int = 0
-    winner_id: int | None = None      # None — ничья
+    winner_id: int | None = None  # None — ничья
     challenger_damage: int = 0
     target_damage: int = 0
     challenger_hp: int = 0
@@ -324,7 +327,7 @@ class AchievementStatus:
 
 @dataclass
 class ExpiredNotice:
-    kind: str                # offer | challenge
+    kind: str  # offer | challenge
     id: int
     chat_id: int | None
     message_id: int | None
@@ -332,9 +335,32 @@ class ExpiredNotice:
 
 
 __all__ = [
-    "MAX_ENERGY", "ShipState", "ship_max_hp", "ship_capacity", "Profile", "RegisterResult", "Progress",
-    "TradeResult", "TravelResult", "MineResult", "CraftResult", "HuntResult", "UpgradeResult",
-    "ShipPurchaseResult", "RepairResult", "OfferView", "OfferOutcome", "ChallengeView", "DuelResult",
-    "QuestView", "ClaimResult", "ClanView", "RankRow", "Ranking", "LedgerEntry", "HistoryPage",
-    "AchievementStatus", "ExpiredNotice",
+    "MAX_ENERGY",
+    "ShipState",
+    "ship_max_hp",
+    "ship_capacity",
+    "Profile",
+    "RegisterResult",
+    "Progress",
+    "TradeResult",
+    "TravelResult",
+    "MineResult",
+    "CraftResult",
+    "HuntResult",
+    "UpgradeResult",
+    "ShipPurchaseResult",
+    "RepairResult",
+    "OfferView",
+    "OfferOutcome",
+    "ChallengeView",
+    "DuelResult",
+    "QuestView",
+    "ClaimResult",
+    "ClanView",
+    "RankRow",
+    "Ranking",
+    "LedgerEntry",
+    "HistoryPage",
+    "AchievementStatus",
+    "ExpiredNotice",
 ]

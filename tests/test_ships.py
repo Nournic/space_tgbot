@@ -45,7 +45,7 @@ async def test_buy_ship_rules(game):
     await make_user(game, 1, balance=20_000)
     with pytest.raises(GameError, match="уровень"):
         await game.ships.buy_ship(1, "scout")
-    await _set_xp(game, 1, 200)                         # уровень 3
+    await _set_xp(game, 1, 200)  # уровень 3
     await set_ship(game, 1, hp=10, cargo_level=1, energy=40)
     r = await game.ships.buy_ship(1, "scout")
     assert r.cost == 2500 and r.hp == 110 and r.capacity == 40
@@ -59,15 +59,15 @@ async def test_buy_ship_rules(game):
 
 async def test_buy_ship_blocked_when_cargo_does_not_fit(game):
     await make_user(game, 1, balance=50_000)
-    await _set_xp(game, 1, 1000)                        # уровень 11
-    await game.ships.buy_ship(1, "freighter")           # трюм 65
-    await give_items(game, 1, titanium=25)              # 50 единиц
+    await _set_xp(game, 1, 1000)  # уровень 11
+    await game.ships.buy_ship(1, "freighter")  # трюм 65
+    await give_items(game, 1, titanium=25)  # 50 единиц
     before = await snapshot(game, 1)
     with pytest.raises(GameError, match="не поместится"):
-        await game.ships.buy_ship(1, "scout")           # трюм 30
+        await game.ships.buy_ship(1, "scout")  # трюм 30
     assert await snapshot(game, 1) == before
     with pytest.raises(GameError, match="не поместится"):
-        await game.ships.buy_ship(1, "corvette")        # трюм 45 < 50
+        await game.ships.buy_ship(1, "corvette")  # трюм 45 < 50
     assert await snapshot(game, 1) == before
 
 

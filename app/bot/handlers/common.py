@@ -1,4 +1,5 @@
 """Общие команды: /start, /help, /register, /profile, /stats, /inventory, /history, /events."""
+
 from __future__ import annotations
 
 from aiogram import F, Router
@@ -59,8 +60,11 @@ HELP_TEXT = """🚀 <b>Космический Трейдер</b> — коман�
 @router.message(CommandStart())
 async def cmd_start(message: Message, game: Game) -> None:
     registered = await game.accounts.is_registered(message.from_user.id)
-    lead = ("С возвращением, пилот! Откройте /profile или /market." if registered
-            else f"Нажмите /register — вы получите шаттл, {START_BALANCE} кредитов и старт на Земле.")
+    lead = (
+        "С возвращением, пилот! Откройте /profile или /market."
+        if registered
+        else f"Нажмите /register — вы получите шаттл, {START_BALANCE} кредитов и старт на Земле."
+    )
     await message.answer(
         "🌌 <b>Добро пожаловать в «Космический Трейдер»!</b>\n\n"
         "Покупайте дешевле, летайте между 6 планетами и продавайте дороже. Добывайте ресурсы, "
@@ -82,9 +86,11 @@ async def cmd_register(message: Message, game: Game) -> None:
     result = await game.accounts.register(message.from_user.id, display_name(message.from_user))
     p = result.profile
     if result.created:
-        text = (f"✅ Пилот <b>{esc(p.display_name)}</b> зарегистрирован!\n"
-                f"🚀 Корабль: {esc(p.ship.class_name)}, 💰 {p.balance} кр., 📍 Земля.\n"
-                "Дальше: /market, /map, /help")
+        text = (
+            f"✅ Пилот <b>{esc(p.display_name)}</b> зарегистрирован!\n"
+            f"🚀 Корабль: {esc(p.ship.class_name)}, 💰 {p.balance} кр., 📍 Земля.\n"
+            "Дальше: /market, /map, /help"
+        )
     else:
         text = f"👋 {esc(p.display_name)}, вы уже зарегистрированы — прогресс сохранён. /profile"
     await message.answer(text)
@@ -99,8 +105,9 @@ async def cmd_profile(message: Message, game: Game) -> None:
 @router.message(Command("stats"))
 async def cmd_stats(message: Message, game: Game) -> None:
     p = await game.accounts.profile(message.from_user.id)
-    await message.answer(f"👤 <b>{esc(p.display_name)}</b> · ⭐ ур. {p.level} · 💰 {p.balance} кр.\n\n"
-                         f"{stats_text(p.stats)}")
+    await message.answer(
+        f"👤 <b>{esc(p.display_name)}</b> · ⭐ ур. {p.level} · 💰 {p.balance} кр.\n\n" f"{stats_text(p.stats)}"
+    )
 
 
 @router.message(Command("inventory"))
@@ -122,8 +129,7 @@ async def cb_history(callback: CallbackQuery, callback_data: NavCB, game: Game) 
         raise NotYourButton()
     page_no = int(callback_data.arg) if callback_data.arg.isdigit() else 0
     page = await game.accounts.history(callback.from_user.id, page_no)
-    await safe_edit(callback.message, history_text(page),
-                    pager_kb("hi", callback.from_user.id, page.page, page.pages))
+    await safe_edit(callback.message, history_text(page), pager_kb("hi", callback.from_user.id, page.page, page.pages))
     await cb_answer(callback)
 
 

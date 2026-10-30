@@ -66,7 +66,7 @@ async def test_transfer_and_disband(game):
         await game.clans.transfer(1, 3)
     v = await game.clans.transfer(1, 2)
     assert v.leader_id == 2
-    await game.clans.leave(1)                               # бывший лидер теперь может выйти
+    await game.clans.leave(1)  # бывший лидер теперь может выйти
     await game.clans.donate(2, 500)
     await game.clans.join(3, v.id)
     with pytest.raises(GameError, match="только лидер"):
@@ -79,6 +79,6 @@ async def test_transfer_and_disband(game):
     with pytest.raises(StaleAction):
         await game.clans.disband(2, token=token)
     assert await game.clans.my_clan_id(2) is None
-    assert (await game.accounts.profile(2)).balance == 500   # казна сгорела, взнос не вернулся
+    assert (await game.accounts.profile(2)).balance == 500  # казна сгорела, взнос не вернулся
     clans, _, _ = await game.clans.list_open()
     assert clans == []

@@ -1,4 +1,5 @@
 """Добыча ресурсов на текущей планете."""
+
 from __future__ import annotations
 
 from app.constants import ITEMS, MINE_COOLDOWN, MINE_ENERGY, MINE_MAX_UNITS, MINE_MIN_UNITS, MINEABLE, XP_MINE
@@ -23,7 +24,7 @@ class MiningService:
             require_hull(ship, "добыча")
             require_cooldown(ship.mine_cooldown_until, now, "Добыча")
             if ship.energy < MINE_ENERGY:
-                spend_energy(ship, MINE_ENERGY, now)       # сформирует сообщение об ошибке
+                spend_energy(ship, MINE_ENERGY, now)  # сформирует сообщение об ошибке
             item_id = self.ctx.rng.choice(MINEABLE[user["planet_id"]])
             qty = self.ctx.rng.randint(MINE_MIN_UNITS, MINE_MAX_UNITS)
             used = repo.cargo_used(await repo.get_inventory(conn, user_id))
@@ -43,6 +44,7 @@ class MiningService:
             await progression.add_xp(conn, user_id, XP_MINE, now, progress)
             await progression.advance_quest(conn, user_id, "daily_mine", qty, now, progress)
             await progression.check_achievements(conn, user_id, now, progress)
-            await repo.add_ledger(conn, user_id, "mine", 0, now, item_id=item_id, quantity=qty,
-                                  details=user["planet_id"])
+            await repo.add_ledger(
+                conn, user_id, "mine", 0, now, item_id=item_id, quantity=qty, details=user["planet_id"]
+            )
         return MineResult(item_id, qty, ship.energy, used + need, ship.capacity, progress)

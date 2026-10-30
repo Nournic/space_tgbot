@@ -12,7 +12,7 @@ async def balance(game, uid):
 async def test_hunt_win(game, rng):
     await make_user(game, 1)
     rng.picks = ["raider"]
-    rng.ints = [15, 10, 80, 10]          # сила пирата, бросок игрока, награда, урон
+    rng.ints = [15, 10, 80, 10]  # сила пирата, бросок игрока, награда, урон
     r = await game.combat.hunt(1)
     assert r.won and r.player_power == 20 and r.enemy_power == 15
     assert r.reward == 80 and r.damage == 10 and r.hp_left == 90 and r.energy_left == 85
@@ -32,7 +32,7 @@ async def test_hunt_loss_and_armor(game, rng):
     await make_user(game, 1)
     await set_ship(game, 1, armor_level=2, hp=125)
     rng.picks = ["frigate"]
-    rng.ints = [44, 1, 30]              # поражение, урон 30 − 4 = 26
+    rng.ints = [44, 1, 30]  # поражение, урон 30 − 4 = 26
     r = await game.combat.hunt(1)
     assert not r.won and r.reward == 0 and r.damage == 26 and r.hp_left == 99
     p = await game.accounts.profile(1)
@@ -73,7 +73,7 @@ async def test_challenge_escrow_and_win(game, rng):
     await make_user(game, 2)
     c = await game.pvp.create(1, 2, 100, chat_id=-100)
     assert await balance(game, 1) == 900
-    rng.ints = [20, 1, 25, 5]           # бросок A, бросок B, урон проигравшему, урон победителю
+    rng.ints = [20, 1, 25, 5]  # бросок A, бросок B, урон проигравшему, урон победителю
     d = await game.pvp.accept(c.id, 2)
     assert d.status == "resolved" and d.winner_id == 1
     assert (d.challenger_power, d.target_power) == (30, 11)
@@ -108,7 +108,7 @@ async def test_pvp_validation(game):
     with pytest.raises(GameError, match="другой планете"):
         await game.pvp.create(1, 2, 0, None)
     with pytest.raises(GameError):
-        await game.pvp.create(1, 999, 0, None)            # не зарегистрирован
+        await game.pvp.create(1, 999, 0, None)  # не зарегистрирован
     await make_user(game, 3)
     with pytest.raises(GameError, match="Недостаточно"):
         await game.pvp.create(1, 3, 11, None)
@@ -122,14 +122,14 @@ async def test_cancel_decline_permissions(game):
     with pytest.raises(NotYourButton):
         await game.pvp.accept(c.id, 3)
     with pytest.raises(NotYourButton):
-        await game.pvp.accept(c.id, 1)                    # инициатор не может принять
+        await game.pvp.accept(c.id, 1)  # инициатор не может принять
     with pytest.raises(NotYourButton):
         await game.pvp.cancel(c.id, 2)
     v = await game.pvp.decline(c.id, 2)
     assert v.status == "declined" and await balance(game, 1) == 1000
     with pytest.raises(StaleAction):
         await game.pvp.cancel(c.id, 1)
-    assert await balance(game, 1) == 1000               # возврат ровно один раз
+    assert await balance(game, 1) == 1000  # возврат ровно один раз
     c2 = await game.pvp.create(1, 2, 100, None)
     v = await game.pvp.cancel(c2.id, 1)
     assert v.status == "cancelled" and await balance(game, 1) == 1000
@@ -171,11 +171,11 @@ async def test_pvp_xp_pair_cooldown(game, rng, clock):
     c = await game.pvp.create(1, 2, 0, None)
     d1 = await game.pvp.accept(c.id, 2)
     assert d1.challenger_xp == 20 and not d1.xp_capped
-    rng.ints = [1, 20, 20, 0]                              # снова побеждает игрок 1
-    c = await game.pvp.create(2, 1, 0, None)               # та же пара, обратный порядок
+    rng.ints = [1, 20, 20, 0]  # снова побеждает игрок 1
+    c = await game.pvp.create(2, 1, 0, None)  # та же пара, обратный порядок
     d2 = await game.pvp.accept(c.id, 1)
     assert d2.challenger_xp == 0 and d2.target_xp == 0 and d2.xp_capped
-    assert (await game.accounts.profile(1)).stats["pvp_wins"] == 2    # статистика считается
+    assert (await game.accounts.profile(1)).stats["pvp_wins"] == 2  # статистика считается
     clock.advance(3600)
     rng.ints = [20, 1, 20, 0]
     c = await game.pvp.create(1, 2, 0, None)

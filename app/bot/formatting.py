@@ -1,4 +1,5 @@
 """HTML-форматирование ответов. Все пользовательские строки экранируются."""
+
 from __future__ import annotations
 
 from html import escape
@@ -144,8 +145,11 @@ def ship_text(p: Profile, now: int) -> str:
     for m in MODULE_ORDER:
         lines.append(f"{MODULES[m]}: {s.module_level(m)}/{MODULE_MAX_LEVEL}")
     cds = []
-    for label, until in (("перелёт", s.travel_cooldown_until), ("добыча", s.mine_cooldown_until),
-                         ("охота", s.hunt_cooldown_until)):
+    for label, until in (
+        ("перелёт", s.travel_cooldown_until),
+        ("добыча", s.mine_cooldown_until),
+        ("охота", s.hunt_cooldown_until),
+    ):
         if until > now:
             cds.append(f"{label} — {format_duration(until - now)}")
     if cds:
@@ -158,16 +162,21 @@ def shipyard_text(p: Profile) -> str:
     for sc in SHIP_CLASSES.values():
         price = "стартовый" if sc.price is None else f"{sc.price} кр."
         mark = " ✅" if sc.id == p.ship.ship_class else ""
-        lines.append(f"<b>{sc.name}</b> (<code>{sc.id}</code>){mark}: {price}, трюм {sc.cargo}, HP {sc.hp}, "
-                     f"бонус атаки +{sc.combat_bonus}, ур. {sc.min_level}+")
+        lines.append(
+            f"<b>{sc.name}</b> (<code>{sc.id}</code>){mark}: {price}, трюм {sc.cargo}, HP {sc.hp}, "
+            f"бонус атаки +{sc.combat_bonus}, ур. {sc.min_level}+"
+        )
     lines.append("\nПокупка заменяет корпус: модули, груз и энергия сохраняются, прочность — полная.")
     return "\n".join(lines)
 
 
-def market_text(planet_id: str, prices: dict[str, tuple[int, int]], p: Profile, now: int,
-                event_title: str) -> str:
-    lines = [f"🏪 <b>Рынок: {planet_title(planet_id)}</b>", f"🌐 Событие дня: {esc(event_title)}", "",
-             "Товар — покупка / продажа (вес):"]
+def market_text(planet_id: str, prices: dict[str, tuple[int, int]], p: Profile, now: int, event_title: str) -> str:
+    lines = [
+        f"🏪 <b>Рынок: {planet_title(planet_id)}</b>",
+        f"🌐 Событие дня: {esc(event_title)}",
+        "",
+        "Товар — покупка / продажа (вес):",
+    ]
     for item_id in ITEM_ORDER:
         b, s = prices[item_id]
         have = p.inventory.get(item_id, 0)
@@ -179,8 +188,7 @@ def market_text(planet_id: str, prices: dict[str, tuple[int, int]], p: Profile, 
     return "\n".join(lines)
 
 
-def prices_text(table: dict[str, dict[str, tuple[int, int]]], items: list[str], page: int, pages: int,
-                day: str) -> str:
+def prices_text(table: dict[str, dict[str, tuple[int, int]]], items: list[str], page: int, pages: int, day: str) -> str:
     lines = [f"📈 <b>Цены всех планет</b> ({day} UTC), стр. {page + 1}/{pages}", "покупка / продажа"]
     for item_id in items:
         lines.append(f"\n<b>{item_title(item_id)}</b>")
@@ -195,7 +203,7 @@ def prices_text(table: dict[str, dict[str, tuple[int, int]]], items: list[str], 
 
 
 def recipes_text() -> str:
-    lines = ["🛠 <b>Рецепты</b> (работа — {} кр. за единицу, +2 XP за операцию)".format(CRAFT_FEE_PER_UNIT), ""]
+    lines = [f"🛠 <b>Рецепты</b> (работа — {CRAFT_FEE_PER_UNIT} кр. за единицу, +2 XP за операцию)", ""]
     for out, ingredients in RECIPES.items():
         ing = " + ".join(f"{q} {item_title(i)}" for i, q in ingredients.items())
         lines.append(f"1 {item_title(out)} (<code>{out}</code>) ← {ing}")
@@ -208,8 +216,10 @@ def quests_text(day: str, quests: list[QuestView]) -> str:
     for q in quests:
         quest = QUESTS[q.quest_id]
         state = "✅ получено" if q.claimed else ("🎁 готово к получению" if q.done else f"{q.progress}/{q.target}")
-        lines.append(f"<b>{esc(quest.title)}</b> (<code>{q.quest_id}</code>)\n"
-                     f"  Прогресс: {state} | награда {quest.reward_credits} кр., {quest.reward_xp} XP")
+        lines.append(
+            f"<b>{esc(quest.title)}</b> (<code>{q.quest_id}</code>)\n"
+            f"  Прогресс: {state} | награда {quest.reward_credits} кр., {quest.reward_xp} XP"
+        )
     lines.append("\nЗадания обновляются в 00:00 UTC. Получить: <code>/claim daily_sell</code>")
     return "\n".join(lines)
 
@@ -284,8 +294,10 @@ def history_text(h: HistoryPage) -> str:
             details = f" · {esc(e.details)}"
         elif e.details in PLANETS:
             details = f" · {planet_title(e.details)}"
-        lines.append(f"<code>{format_utc(e.created_at)[5:16]}</code> {KIND_LABELS.get(e.kind, esc(e.kind))}"
-                     f" {amount}{item}{details} → {e.balance_after}")
+        lines.append(
+            f"<code>{format_utc(e.created_at)[5:16]}</code> {KIND_LABELS.get(e.kind, esc(e.kind))}"
+            f" {amount}{item}{details} → {e.balance_after}"
+        )
     return "\n".join(lines)
 
 
@@ -297,12 +309,14 @@ def offer_text(o: OfferView, now: int) -> str:
         "cancelled": "🚫 отменено продавцом",
         "expired": "⌛ истекло",
     }[o.status]
-    return (f"🤝 <b>P2P-предложение #{o.id}</b>\n"
-            f"Продавец: {mention(o.seller_id, o.seller_name)}\n"
-            f"Покупатель: {mention(o.buyer_id, o.buyer_name)}\n"
-            f"Товар: <b>{o.quantity} × {item_title(o.item_id)}</b>\n"
-            f"Цена: <b>{o.price}</b> кр. за всё{' (подарок)' if o.price == 0 else ''}\n"
-            f"Статус: {status}")
+    return (
+        f"🤝 <b>P2P-предложение #{o.id}</b>\n"
+        f"Продавец: {mention(o.seller_id, o.seller_name)}\n"
+        f"Покупатель: {mention(o.buyer_id, o.buyer_name)}\n"
+        f"Товар: <b>{o.quantity} × {item_title(o.item_id)}</b>\n"
+        f"Цена: <b>{o.price}</b> кр. за всё{' (подарок)' if o.price == 0 else ''}\n"
+        f"Статус: {status}"
+    )
 
 
 def challenge_text(c: ChallengeView, now: int) -> str:
@@ -313,10 +327,12 @@ def challenge_text(c: ChallengeView, now: int) -> str:
         "cancelled": "🚫 отменён — ставка возвращена",
         "expired": "⌛ истёк — ставка возвращена",
     }[c.status]
-    return (f"⚔️ <b>Вызов на дуэль #{c.id}</b>\n"
-            f"{mention(c.challenger_id, c.challenger_name)} вызывает {mention(c.target_id, c.target_name)}\n"
-            f"Ставка: <b>{c.stake}</b> кр. с каждого\n"
-            f"Статус: {status}")
+    return (
+        f"⚔️ <b>Вызов на дуэль #{c.id}</b>\n"
+        f"{mention(c.challenger_id, c.challenger_name)} вызывает {mention(c.target_id, c.target_name)}\n"
+        f"Ставка: <b>{c.stake}</b> кр. с каждого\n"
+        f"Статус: {status}"
+    )
 
 
 def duel_text(d: DuelResult) -> str:
@@ -328,20 +344,24 @@ def duel_text(d: DuelResult) -> str:
         winner = a if d.winner_id == c.challenger_id else b
         outcome = f"🏆 Победитель: {winner}" + (f" — выигрыш {2 * c.stake} кр." if c.stake else "")
     xp_note = "\n⭐ XP за дуэль этой пары уже начислялся в течение часа — без XP." if d.xp_capped else ""
-    return (f"⚔️ <b>Дуэль #{c.id}</b>\n"
-            f"{a}: сила {d.challenger_power}, урон −{d.challenger_damage} HP (осталось {d.challenger_hp}), "
-            f"+{d.challenger_xp} XP\n"
-            f"{b}: сила {d.target_power}, урон −{d.target_damage} HP (осталось {d.target_hp}), "
-            f"+{d.target_xp} XP\n"
-            f"{outcome}{xp_note}")
+    return (
+        f"⚔️ <b>Дуэль #{c.id}</b>\n"
+        f"{a}: сила {d.challenger_power}, урон −{d.challenger_damage} HP (осталось {d.challenger_hp}), "
+        f"+{d.challenger_xp} XP\n"
+        f"{b}: сила {d.target_power}, урон −{d.target_damage} HP (осталось {d.target_hp}), "
+        f"+{d.target_xp} XP\n"
+        f"{outcome}{xp_note}"
+    )
 
 
 def clan_text(v: ClanView) -> str:
-    lines = [f"🏰 <b>{esc(v.name)}</b> (ID {v.id})",
-             f"👑 Лидер: {esc(v.leader_name)}",
-             f"👥 Участники: {v.member_count}/30",
-             f"🏦 Казна: <b>{v.treasury}</b> кр.",
-             f"🚪 {'Открыт' if v.is_open else 'Закрыт'} для вступления"]
+    lines = [
+        f"🏰 <b>{esc(v.name)}</b> (ID {v.id})",
+        f"👑 Лидер: {esc(v.leader_name)}",
+        f"👥 Участники: {v.member_count}/30",
+        f"🏦 Казна: <b>{v.treasury}</b> кр.",
+        f"🚪 {'Открыт' if v.is_open else 'Закрыт'} для вступления",
+    ]
     if v.members:
         lines.append("\n" + ", ".join(("👑 " if uid == v.leader_id else "") + esc(name) for uid, name in v.members))
     return "\n".join(lines)

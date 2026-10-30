@@ -1,4 +1,5 @@
 """Токены inline-кнопок и обработчики с заглушками Telegram-объектов."""
+
 from types import SimpleNamespace
 
 import pytest
@@ -6,7 +7,7 @@ import pytest
 from app.bot.handlers import actions, trading
 from app.bot.keyboards import DuelCB, NavCB, OfferCB, TokenCB
 from app.bot.middlewares import GameMiddleware
-from app.errors import NotYourButton, StaleAction
+from app.errors import InsufficientFunds, NotYourButton, StaleAction
 from tests.conftest import give_items, make_user
 
 
@@ -30,10 +31,12 @@ class FakeCallback:
 
 
 def test_callback_data_limits():
-    for data in (TokenCB(token="f" * 12, choice="electronics").pack(),
-                 NavCB(view="mi", owner=10**13, arg="electronics").pack(),
-                 OfferCB(action="a", offer_id=10**12).pack(),
-                 DuelCB(action="c", challenge_id=10**12).pack()):
+    for data in (
+        TokenCB(token="f" * 12, choice="electronics").pack(),
+        NavCB(view="mi", owner=10**13, arg="electronics").pack(),
+        OfferCB(action="a", offer_id=10**12).pack(),
+        DuelCB(action="c", challenge_id=10**12).pack(),
+    ):
         assert len(data.encode()) <= 64
 
 
@@ -54,7 +57,7 @@ async def test_token_expiry_and_wrong_action(game, clock):
     await make_user(game, 1)
     token = await game.tokens.issue(1, None, "hunt", ttl=60)
     with pytest.raises(StaleAction):
-        await game.mining.mine(1, token=token)           # токен другого действия
+        await game.mining.mine(1, token=token)  # токен другого действия
     clock.advance(61)
     with pytest.raises(StaleAction):
         await game.combat.hunt(1, token=token)
@@ -63,7 +66,7 @@ async def test_token_expiry_and_wrong_action(game, clock):
 async def test_failed_action_keeps_token_usable(game):
     await make_user(game, 1, balance=0)
     token = await game.tokens.issue(1, None, "upgrade")
-    with pytest.raises(Exception):
+    with pytest.raises(InsufficientFunds):
         await game.ships.upgrade(1, "engine", token=token)
     async with game.db.transaction() as conn:
         await conn.execute("UPDATE users SET balance = 500 WHERE user_id = 1")

@@ -1,4 +1,5 @@
 """Сборка роутеров, middleware и списка команд."""
+
 from __future__ import annotations
 
 from functools import lru_cache

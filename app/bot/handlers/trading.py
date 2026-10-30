@@ -1,4 +1,5 @@
 """P2P-сделки: /offer (ответом на сообщение покупателя), /offers и кнопки предложения."""
+
 from __future__ import annotations
 
 from aiogram import Router
@@ -20,9 +21,11 @@ router = Router(name="trading")
 async def cmd_offer(message: Message, command: CommandObject, game: Game) -> None:
     args = split_args(command.args)
     if len(args) != 3:
-        raise ValidationError("✍️ Формат: ответом на сообщение покупателя "
-                              "<code>/offer &lt;товар&gt; &lt;кол-во&gt; &lt;цена за всё&gt;</code>, "
-                              "например <code>/offer water 5 200</code>")
+        raise ValidationError(
+            "✍️ Формат: ответом на сообщение покупателя "
+            "<code>/offer &lt;товар&gt; &lt;кол-во&gt; &lt;цена за всё&gt;</code>, "
+            "например <code>/offer water 5 200</code>"
+        )
     item_id = parse_item(args[0])
     qty = parse_int(args[1], "количество", 1, MAX_QTY)
     price = parse_int(args[2], "цена", 0, MAX_PRICE)
@@ -41,11 +44,17 @@ async def cmd_offers(message: Message, game: Game) -> None:
     incoming, outgoing = await game.offers.list_for(message.from_user.id)
     now = game.ctx.clock.now()
     lines = ["🤝 <b>Активные P2P-предложения</b>", "", "📥 Входящие:"]
-    lines += [f"#{o.id} от {mention(o.seller_id, o.seller_name)}: {o.quantity} × {item_title(o.item_id)} "
-              f"за {o.price} кр. (ещё {format_duration(o.expires_at - now)})" for o in incoming] or ["—"]
+    lines += [
+        f"#{o.id} от {mention(o.seller_id, o.seller_name)}: {o.quantity} × {item_title(o.item_id)} "
+        f"за {o.price} кр. (ещё {format_duration(o.expires_at - now)})"
+        for o in incoming
+    ] or ["—"]
     lines += ["", "📤 Исходящие:"]
-    lines += [f"#{o.id} для {mention(o.buyer_id, o.buyer_name)}: {o.quantity} × {item_title(o.item_id)} "
-              f"за {o.price} кр. (ещё {format_duration(o.expires_at - now)})" for o in outgoing] or ["—"]
+    lines += [
+        f"#{o.id} для {mention(o.buyer_id, o.buyer_name)}: {o.quantity} × {item_title(o.item_id)} "
+        f"за {o.price} кр. (ещё {format_duration(o.expires_at - now)})"
+        for o in outgoing
+    ] or ["—"]
     await message.answer("\n".join(lines))
 
 
@@ -64,6 +73,9 @@ async def cb_offer(callback: CallbackQuery, callback_data: OfferCB, game: Game) 
     await safe_edit(callback.message, offer_text(outcome.offer, game.ctx.clock.now()))
     if outcome.status == "expired":
         raise StaleAction()
-    answers = {"accepted": "✅ Сделка совершена!", "declined": "Предложение отклонено",
-               "cancelled": "Предложение отменено"}
+    answers = {
+        "accepted": "✅ Сделка совершена!",
+        "declined": "Предложение отклонено",
+        "cancelled": "Предложение отменено",
+    }
     await cb_answer(callback, answers[outcome.status])

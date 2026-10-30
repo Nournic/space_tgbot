@@ -8,6 +8,7 @@
   прочность не меняется (растёт только максимум) — бесплатного ремонта нет.
 * Ремонт — 5 кредитов за единицу недостающей прочности.
 """
+
 from __future__ import annotations
 
 from app.constants import MODULE_COST_STEP, MODULE_MAX_LEVEL, MODULES, REPAIR_COST_PER_HP, SHIP_CLASSES
@@ -52,8 +53,10 @@ class ShipService:
                 raise GameError(f"📦 Груз ({used}) не поместится в трюм нового корпуса ({capacity}). Разгрузитесь.")
             balance = await repo.change_balance(conn, user_id, -spec.price, now)
             new_hp = ship_max_hp(ship_class, ship.armor_level)
-            await conn.execute("UPDATE ships SET ship_class = ?, hp = ?, updated_at = ? WHERE user_id = ?",
-                               (ship_class, new_hp, now, user_id))
+            await conn.execute(
+                "UPDATE ships SET ship_class = ?, hp = ?, updated_at = ? WHERE user_id = ?",
+                (ship_class, new_hp, now, user_id),
+            )
             ship.ship_class = ship_class
             ship.hp = new_hp
             await save_ship(conn, ship, now)
@@ -75,8 +78,12 @@ class ShipService:
             new_level = current + 1
             cost = upgrade_cost(new_level)
             balance = await repo.change_balance(conn, user_id, -cost, now)
-            column = {"cargo": "cargo_level", "engine": "engine_level",
-                      "weapon": "weapon_level", "armor": "armor_level"}[module]
+            column = {
+                "cargo": "cargo_level",
+                "engine": "engine_level",
+                "weapon": "weapon_level",
+                "armor": "armor_level",
+            }[module]
             # Условие по старому уровню защищает от гонки двух улучшений.
             cur = await conn.execute(
                 f"UPDATE ships SET {column} = ?, updated_at = ? WHERE user_id = ? AND {column} = ?",

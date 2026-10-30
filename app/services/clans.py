@@ -3,6 +3,7 @@
 Создание стоит 1 000 кредитов (сгорают). Казна пополняется взносами и при
 роспуске сгорает без возврата. Лидер не может выйти без передачи лидерства.
 """
+
 from __future__ import annotations
 
 import re
@@ -30,16 +31,28 @@ async def _clan_view(conn: Conn, clan_id: int, with_members: bool = False) -> Cl
     cur = await conn.execute(
         "SELECT c.*, u.display_name AS leader_name, "
         "(SELECT COUNT(*) FROM clan_members m WHERE m.clan_id = c.id) AS members "
-        "FROM clans c JOIN users u ON u.user_id = c.leader_id WHERE c.id = ?", (clan_id,))
+        "FROM clans c JOIN users u ON u.user_id = c.leader_id WHERE c.id = ?",
+        (clan_id,),
+    )
     row = await cur.fetchone()
     if row is None:
         raise GameError("🏰 Клан не найден.")
-    view = ClanView(int(row["id"]), row["name"], int(row["leader_id"]), row["leader_name"], int(row["treasury"]),
-                    bool(row["is_open"]), int(row["members"]), int(row["created_at"]))
+    view = ClanView(
+        int(row["id"]),
+        row["name"],
+        int(row["leader_id"]),
+        row["leader_name"],
+        int(row["treasury"]),
+        bool(row["is_open"]),
+        int(row["members"]),
+        int(row["created_at"]),
+    )
     if with_members:
         cur = await conn.execute(
             "SELECT m.user_id, u.display_name FROM clan_members m JOIN users u ON u.user_id = m.user_id "
-            "WHERE m.clan_id = ? ORDER BY m.joined_at, m.user_id", (clan_id,))
+            "WHERE m.clan_id = ? ORDER BY m.joined_at, m.user_id",
+            (clan_id,),
+        )
         view.members = [(int(r[0]), r[1]) for r in await cur.fetchall()]
     return view
 
@@ -60,13 +73,17 @@ class ClanService:
                 raise GameError("🏷 Клан с таким названием уже существует.")
             await repo.change_balance(conn, user_id, -CLAN_CREATE_COST, now)
             cur = await conn.execute(
-                "INSERT INTO clans (name, name_key, leader_id, treasury, is_open, created_at) VALUES (?, ?, ?, 0, 1, ?)",
-                (name, key, user_id, now))
+                "INSERT INTO clans (name, name_key, leader_id, treasury, is_open, created_at) "
+                "VALUES (?, ?, ?, 0, 1, ?)",
+                (name, key, user_id, now),
+            )
             clan_id = int(cur.lastrowid)
-            await conn.execute("INSERT INTO clan_members (user_id, clan_id, joined_at) VALUES (?, ?, ?)",
-                               (user_id, clan_id, now))
-            await repo.add_ledger(conn, user_id, "clan_create", -CLAN_CREATE_COST, now, ref_type="clan",
-                                  ref_id=clan_id, details=name)
+            await conn.execute(
+                "INSERT INTO clan_members (user_id, clan_id, joined_at) VALUES (?, ?, ?)", (user_id, clan_id, now)
+            )
+            await repo.add_ledger(
+                conn, user_id, "clan_create", -CLAN_CREATE_COST, now, ref_type="clan", ref_id=clan_id, details=name
+            )
             view = await _clan_view(conn, clan_id)
         return view
 
@@ -76,8 +93,10 @@ class ClanService:
             total = int((await cur.fetchone())[0])
             pages = max(1, -(-total // CLAN_PAGE_SIZE))
             page = max(0, min(page, pages - 1))
-            cur = await conn.execute("SELECT id FROM clans WHERE is_open = 1 ORDER BY id LIMIT ? OFFSET ?",
-                                     (CLAN_PAGE_SIZE, page * CLAN_PAGE_SIZE))
+            cur = await conn.execute(
+                "SELECT id FROM clans WHERE is_open = 1 ORDER BY id LIMIT ? OFFSET ?",
+                (CLAN_PAGE_SIZE, page * CLAN_PAGE_SIZE),
+            )
             ids = [int(r[0]) for r in await cur.fetchall()]
             views = [await _clan_view(conn, cid) for cid in ids]
         return views, page, pages
@@ -97,8 +116,9 @@ class ClanService:
             cur = await conn.execute("SELECT COUNT(*) FROM clan_members WHERE clan_id = ?", (clan_id,))
             if int((await cur.fetchone())[0]) >= CLAN_MAX_MEMBERS:
                 raise GameError(f"👥 В клане уже максимум участников ({CLAN_MAX_MEMBERS}).")
-            await conn.execute("INSERT INTO clan_members (user_id, clan_id, joined_at) VALUES (?, ?, ?)",
-                               (user_id, clan_id, now))
+            await conn.execute(
+                "INSERT INTO clan_members (user_id, clan_id, joined_at) VALUES (?, ?, ?)", (user_id, clan_id, now)
+            )
             view = await _clan_view(conn, clan_id)
         return view
 
@@ -110,8 +130,10 @@ class ClanService:
                 raise GameError("🏰 Вы не состоите в клане.")
             view = await _clan_view(conn, clan_id)
             if view.leader_id == user_id:
-                raise GameError("👑 Лидер не может выйти. Передайте лидерство (/clan transfer ответом на "
-                                "сообщение участника) или распустите клан (/clan disband).")
+                raise GameError(
+                    "👑 Лидер не может выйти. Передайте лидерство (/clan transfer ответом на "
+                    "сообщение участника) или распустите клан (/clan disband)."
+                )
             await conn.execute("DELETE FROM clan_members WHERE user_id = ?", (user_id,))
         return view.name
 
@@ -156,8 +178,9 @@ class ClanService:
                 raise GameError("👑 Вы уже лидер.")
             if await repo.get_member_clan_id(conn, new_leader_id) != clan_id:
                 raise GameError("👥 Этот игрок не состоит в вашем клане.")
-            cur = await conn.execute("UPDATE clans SET leader_id = ? WHERE id = ? AND leader_id = ?",
-                                     (new_leader_id, clan_id, user_id))
+            cur = await conn.execute(
+                "UPDATE clans SET leader_id = ? WHERE id = ? AND leader_id = ?", (new_leader_id, clan_id, user_id)
+            )
             if cur.rowcount != 1:
                 raise StaleAction()
             view = await _clan_view(conn, clan_id)
@@ -188,7 +211,15 @@ class ClanService:
             view = await _clan_view(conn, clan_id)
             if view.leader_id != user_id:
                 raise GameError("👑 Распустить клан может только лидер.")
-            await repo.add_ledger(conn, user_id, "clan_disband", 0, now, ref_type="clan", ref_id=clan_id,
-                                  details=f"{view.name}: сгорело {view.treasury}")
-            await conn.execute("DELETE FROM clans WHERE id = ?", (clan_id,))   # участники — ON DELETE CASCADE
+            await repo.add_ledger(
+                conn,
+                user_id,
+                "clan_disband",
+                0,
+                now,
+                ref_type="clan",
+                ref_id=clan_id,
+                details=f"{view.name}: сгорело {view.treasury}",
+            )
+            await conn.execute("DELETE FROM clans WHERE id = ?", (clan_id,))  # участники — ON DELETE CASCADE
         return view

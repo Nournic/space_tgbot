@@ -1,4 +1,5 @@
 """Перелёты по двусторонним маршрутам карты."""
+
 from __future__ import annotations
 
 from app.constants import PLANETS, ROUTES, TRAVEL_COOLDOWN, TRAVEL_MIN_COST, XP_TRAVEL
@@ -48,8 +49,9 @@ class TravelService:
             spend_energy(ship, cost, now)
             ship.travel_cooldown_until = now + TRAVEL_COOLDOWN
             await save_ship(conn, ship, now)
-            await conn.execute("UPDATE users SET planet_id = ?, updated_at = ? WHERE user_id = ?",
-                               (destination, now, user_id))
+            await conn.execute(
+                "UPDATE users SET planet_id = ?, updated_at = ? WHERE user_id = ?", (destination, now, user_id)
+            )
             progress = Progress()
             await repo.inc_stats(conn, user_id, travels=1)
             await progression.add_xp(conn, user_id, XP_TRAVEL, now, progress)

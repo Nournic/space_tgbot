@@ -1,4 +1,5 @@
 """Конкурентные операции и перезапуск сервисов."""
+
 import asyncio
 
 from app.db.connection import Database
@@ -53,8 +54,9 @@ async def test_concurrent_cancel_and_expire_refund_once(game, clock):
     await make_user(game, 2)
     c = await game.pvp.create(1, 2, 400, None)
     clock.advance(301)
-    await asyncio.gather(game.pvp.cancel(c.id, 1), game.pvp.expire_due(), game.pvp.decline(c.id, 2),
-                         return_exceptions=True)
+    await asyncio.gather(
+        game.pvp.cancel(c.id, 1), game.pvp.expire_due(), game.pvp.decline(c.id, 2), return_exceptions=True
+    )
     assert (await game.accounts.profile(1)).balance == 1000
 
 
@@ -77,7 +79,7 @@ async def test_restart_keeps_state(game, clock, rng, db_path):
     assert next(q for q in quests if q.quest_id == "daily_travel").progress == 1
     assert (await g2.offers.get(offer.id)).status == "pending"
     clock.advance(400)
-    notices = await g2.cleanup()                       # как при старте бота
+    notices = await g2.cleanup()  # как при старте бота
     assert {n.kind for n in notices} == {"offer", "challenge"}
     assert (await g2.accounts.profile(1)).balance == 1000
     assert (await g2.pvp.get(duel.id)).status == "expired"

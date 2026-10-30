@@ -1,4 +1,5 @@
 """Производство по трём рецептам."""
+
 from __future__ import annotations
 
 from app.constants import CRAFT_FEE_PER_UNIT, ITEMS, MAX_CRAFT_QTY, RECIPES, XP_CRAFT
@@ -44,9 +45,11 @@ class CraftingService:
             if lacking:
                 raise GameError("🧪 Не хватает ингредиентов:\n" + "\n".join(lacking))
             capacity = ship_capacity(ship["ship_class"], int(ship["cargo_level"]))
-            used_after = (repo.cargo_used(inventory)
-                          - sum(ITEMS[i].weight * q for i, q in consumed.items())
-                          + ITEMS[item_id].weight * qty)
+            used_after = (
+                repo.cargo_used(inventory)
+                - sum(ITEMS[i].weight * q for i, q in consumed.items())
+                + ITEMS[item_id].weight * qty
+            )
             if used_after > capacity:
                 raise GameError(f"📦 Результат не поместится в трюм ({used_after} > {capacity}).")
             fee = CRAFT_FEE_PER_UNIT * qty
@@ -58,6 +61,14 @@ class CraftingService:
             await repo.inc_stats(conn, user_id, crafts=1)
             await progression.add_xp(conn, user_id, XP_CRAFT, now, progress)
             await progression.check_achievements(conn, user_id, now, progress)
-            await repo.add_ledger(conn, user_id, "craft", -fee, now, item_id=item_id, quantity=qty,
-                                  details=", ".join(f"-{q} {i}" for i, q in consumed.items()))
+            await repo.add_ledger(
+                conn,
+                user_id,
+                "craft",
+                -fee,
+                now,
+                item_id=item_id,
+                quantity=qty,
+                details=", ".join(f"-{q} {i}" for i, q in consumed.items()),
+            )
         return CraftResult(item_id, qty, fee, consumed, balance, progress)

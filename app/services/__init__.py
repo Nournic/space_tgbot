@@ -1,4 +1,5 @@
 """Сборка всех игровых сервисов в один контейнер."""
+
 from __future__ import annotations
 
 import random
@@ -50,10 +51,12 @@ class Game:
         notices += await self.offers.expire_due()
         async with self.db.transaction() as conn:
             now = self.ctx.clock.now()
-            await conn.execute("UPDATE action_tokens SET status = 'expired' WHERE status = 'active' AND expires_at <= ?",
-                               (now,))
-            await conn.execute("DELETE FROM action_tokens WHERE status <> 'active' AND expires_at <= ?",
-                               (now - 86_400,))
+            await conn.execute(
+                "UPDATE action_tokens SET status = 'expired' WHERE status = 'active' AND expires_at <= ?", (now,)
+            )
+            await conn.execute(
+                "DELETE FROM action_tokens WHERE status <> 'active' AND expires_at <= ?", (now - 86_400,)
+            )
         return notices
 
 

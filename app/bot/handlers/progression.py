@@ -1,4 +1,5 @@
 """Прогресс: /quests, /claim, /achievements, /top."""
+
 from __future__ import annotations
 
 from aiogram import F, Router
@@ -28,8 +29,10 @@ async def render_quests(game: Game, user_id: int, chat_id: int | None, prefix: s
 
 
 def claim_text(r: ClaimResult) -> str:
-    return (f"🎁 Награда за «{QUESTS[r.quest_id].title}»: +{r.credits} кр., +{r.xp} XP. "
-            f"💰 Баланс: {r.balance}{progress_lines(r.progress)}")
+    return (
+        f"🎁 Награда за «{QUESTS[r.quest_id].title}»: +{r.credits} кр., +{r.xp} XP. "
+        f"💰 Баланс: {r.balance}{progress_lines(r.progress)}"
+    )
 
 
 @router.message(Command("quests"))
