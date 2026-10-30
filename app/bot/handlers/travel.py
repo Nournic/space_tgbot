@@ -9,7 +9,7 @@ from aiogram.types import Message
 from app.bot.formatting import planet_title, progress_lines
 from app.bot.keyboards import travel_kb
 from app.bot.utils import parse_planet, split_args
-from app.constants import PLANET_ORDER, PLANETS, ROUTES
+from app.constants import MAX_ENERGY, PLANET_ORDER, PLANETS, ROUTES, TRAVEL_COOLDOWN
 from app.models import TravelResult
 from app.services import Game
 from app.services.base import format_duration
@@ -35,7 +35,8 @@ async def render_travel(game: Game, user_id: int, chat_id: int | None, prefix: s
     token = await game.tokens.issue(user_id, chat_id, "travel", {"from": here})
     text = (
         f"{prefix}{map_overview(here)}\n\n"
-        f"Вы на: <b>{planet_title(here)}</b> | 🔋 {p.ship.energy}/100 | ❤️ {p.ship.hp}/{p.ship.max_hp}{cd_line}\n"
+        f"Вы на: <b>{planet_title(here)}</b> | 🔋 {p.ship.energy}/{MAX_ENERGY} | "
+        f"❤️ {p.ship.hp}/{p.ship.max_hp}{cd_line}\n"
         "Куда летим? (стоимость в энергии с учётом двигателя)"
     )
     return text, travel_kb(token, costs)
@@ -44,7 +45,7 @@ async def render_travel(game: Game, user_id: int, chat_id: int | None, prefix: s
 def travel_result_text(r: TravelResult) -> str:
     return (
         f"🚀 Перелёт {planet_title(r.from_planet)} → <b>{planet_title(r.to_planet)}</b> завершён!\n"
-        f"🔋 −{r.energy_cost}, осталось {r.energy_left}. Следующий перелёт через 60 сек."
+        f"🔋 −{r.energy_cost}, осталось {r.energy_left}. Следующий перелёт через {format_duration(TRAVEL_COOLDOWN)}"
         f"{progress_lines(r.progress)}\n\nОткройте /market, чтобы торговать."
     )
 

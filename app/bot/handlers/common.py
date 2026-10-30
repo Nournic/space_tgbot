@@ -9,13 +9,13 @@ from aiogram.types import CallbackQuery, Message
 from app.bot.formatting import esc, history_text, inventory_text, profile_text, stats_text
 from app.bot.keyboards import NavCB, pager_kb
 from app.bot.utils import cb_answer, display_name, safe_edit
-from app.constants import START_BALANCE
+from app.constants import HUNT_ENERGY, MINE_ENERGY, PLANETS, PRICE_MAX_PCT, PRICE_MIN_PCT, START_BALANCE
 from app.errors import NotYourButton
 from app.services import Game
 
 router = Router(name="common")
 
-HELP_TEXT = """🚀 <b>Космический Трейдер</b> — команды
+HELP_TEXT = f"""🚀 <b>Космический Трейдер</b> — команды
 
 <b>Аккаунт</b>
 /register — регистрация (повтор безопасен)
@@ -35,11 +35,11 @@ HELP_TEXT = """🚀 <b>Космический Трейдер</b> — коман�
 /repair — ремонт (<code>/repair</code> или <code>/repair 20</code>)
 
 <b>Ресурсы</b>
-/mine — добыча (12 🔋), /recipes — рецепты
+/mine — добыча ({MINE_ENERGY} 🔋), /recipes — рецепты
 <code>/craft electronics 2</code>
 
 <b>Бои</b>
-/hunt — охота на пиратов (15 🔋)
+/hunt — охота на пиратов ({HUNT_ENERGY} 🔋)
 <code>/challenge 100</code> — ответом на сообщение игрока: дуэль со ставкой
 /duels — ваши вызовы
 
@@ -67,7 +67,7 @@ async def cmd_start(message: Message, game: Game) -> None:
     )
     await message.answer(
         "🌌 <b>Добро пожаловать в «Космический Трейдер»!</b>\n\n"
-        "Покупайте дешевле, летайте между 6 планетами и продавайте дороже. Добывайте ресурсы, "
+        f"Покупайте дешевле, летайте между {len(PLANETS)} планетами и продавайте дороже. Добывайте ресурсы, "
         "производите товары, улучшайте корабль, охотьтесь на пиратов, вызывайте друзей на дуэли "
         "и создавайте кланы.\n\n"
         f"{lead}\n\n"
@@ -139,5 +139,6 @@ async def cmd_events(message: Message, game: Game) -> None:
     await message.answer(
         f"🌐 <b>Событие дня</b> ({day} UTC)\n\n"
         f"<b>{esc(event.title)}</b>\n{esc(event.description)}\n\n"
-        "Событие меняется в 00:00 UTC и одинаково для всех. Итоговая цена ограничена 70–130% базовой."
+        "Событие меняется в 00:00 UTC и одинаково для всех. "
+        f"Итоговая цена ограничена {PRICE_MIN_PCT}–{PRICE_MAX_PCT}% базовой."
     )
