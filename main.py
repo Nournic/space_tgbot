@@ -54,7 +54,7 @@ async def main() -> None:
     bot = Bot(
         settings.bot_token, default=DefaultBotProperties(parse_mode=ParseMode.HTML, link_preview_is_disabled=True)
     )
-    dp = setup_dispatcher(game)
+    dp = setup_dispatcher(game, settings.admin_ids)
     cleanup = asyncio.create_task(cleanup_loop(game, bot))
     try:
         try:

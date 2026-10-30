@@ -326,6 +326,23 @@ class AchievementStatus:
 
 
 @dataclass
+class AdminStats:
+    """Сводка для /admin. Суммы — в кредитах, окно «за сутки» — последние 24 часа."""
+
+    players: int
+    new_24h: int
+    active_24h: int
+    balances: int
+    escrow: int
+    treasuries: int
+    income_24h: int
+    spent_24h: int
+    pending_offers: int
+    pending_duels: int
+    clans: int
+
+
+@dataclass
 class ExpiredNotice:
     kind: str  # offer | challenge
     id: int
@@ -362,5 +379,6 @@ __all__ = [
     "LedgerEntry",
     "HistoryPage",
     "AchievementStatus",
+    "AdminStats",
     "ExpiredNotice",
 ]

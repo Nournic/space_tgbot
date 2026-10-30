@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from app.clock import Clock, SystemClock
 from app.db.connection import Database
 from app.services.accounts import AccountService, TokenService
+from app.services.admin import AdminService
 from app.services.base import ServiceContext
 from app.services.clans import ClanService
 from app.services.combat import CombatService
@@ -40,6 +41,7 @@ class Game:
     quests: QuestService
     clans: ClanService
     rankings: RankingService
+    admin: AdminService
 
     @property
     def db(self) -> Database:
@@ -78,4 +80,5 @@ def build_game(db: Database, *, seed: str, clock: Clock | None = None, rng: rand
         quests=QuestService(ctx),
         clans=ClanService(ctx),
         rankings=RankingService(ctx),
+        admin=AdminService(ctx),
     )

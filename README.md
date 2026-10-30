@@ -30,6 +30,7 @@ PvE-охота на пиратов, добровольные PvP-дуэли со
    BOT_TOKEN=123456:ABC...
    DATABASE_PATH=data/space_trader.sqlite3
    GAME_SEED=space-trader-1.0
+   ADMIN_IDS=123456789        # необязательно: кому доступна /admin
    ```
 
 5. Запустите:
@@ -119,6 +120,7 @@ git archive --format=tar.gz -o bot.tgz HEAD && scp bot.tgz vps_server:~/bot.tgz 
 | `/top [balance\|xp\|pve\|pvp\|clans]` | Рейтинги |
 | `/clan …` | `create`, `list`, `join`, `leave`, `info`, `donate`, `transfer`, `disband` |
 | `/events` | Событие дня |
+| `/admin` | Сводная статистика сервера (только `ADMIN_IDS`, только в личке с ботом) |
 
 Товары можно указывать по ID (`water`) или по названию (`вода`), планеты — так же (`mars`, `марс`).
 
