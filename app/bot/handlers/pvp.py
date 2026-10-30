@@ -8,7 +8,17 @@ from aiogram.types import CallbackQuery, Message
 
 from app.bot.formatting import challenge_text, duel_text, mention
 from app.bot.keyboards import DuelCB, duel_kb
-from app.bot.utils import cb_answer, display_name, parse_int, reply_target, safe_edit, split_args
+from app.bot.utils import (
+    cb_answer,
+    close_by_id,
+    display_name,
+    edit_original,
+    parse_close_args,
+    parse_int,
+    reply_target,
+    safe_edit,
+    split_args,
+)
 from app.constants import MAX_STAKE
 from app.errors import StaleAction, ValidationError
 from app.services import Game
@@ -41,8 +51,23 @@ async def cmd_challenge(message: Message, command: CommandObject, game: Game) ->
 
 
 @router.message(Command("duels"))
-async def cmd_duels(message: Message, game: Game) -> None:
+async def cmd_duels(message: Message, command: CommandObject, game: Game) -> None:
     uid = message.from_user.id
+    close = parse_close_args(split_args(command.args), "duels")
+    if close is not None:
+        action, challenge_id = close
+        service = game.pvp.cancel if action == "cancel" else game.pvp.decline
+        view = await close_by_id(
+            service,
+            challenge_id,
+            uid,
+            "⛔ Отменить может только инициатор, отклонить — только вызванный игрок.",
+            f"⌛ Вызов #{challenge_id} уже закрыт или не найден.",
+        )
+        text = challenge_text(view, game.ctx.clock.now())
+        await edit_original(message.bot, view.chat_id, view.message_id, text)
+        await message.reply(text)
+        return
     items = await game.pvp.list_for(uid)
     if not items:
         await message.answer("⚔️ У вас пока нет вызовов. Ответьте на сообщение игрока: <code>/challenge 50</code>")
@@ -57,6 +82,8 @@ async def cmd_duels(message: Message, game: Game) -> None:
                 " · 🤝 ничья" if c.winner_id is None else (" · 🏆 победа" if c.winner_id == uid else " · 🩸 поражение")
             )
         lines.append(f"#{c.id} {role} {mention(*other)} · ставка {c.stake} · {STATUS_RU[c.status]}{result}")
+    if any(c.status == "pending" for c in items):
+        lines += ["", "Отменить свой вызов: <code>/duels cancel ID</code>, отклонить: <code>/duels decline ID</code>"]
     await message.answer("\n".join(lines))
 
 
