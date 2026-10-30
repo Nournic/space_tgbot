@@ -33,3 +33,14 @@ async def test_rendered_texts_use_constants(game):
     assert f"/{MAX_ENERGY}" in h.bot.texts()[-1]
     await h.send(1, "/craft fuel_cell 3")
     assert f"работа {CRAFT_FEE_PER_UNIT * 3} кр." in h.bot.texts()[-1]
+
+
+async def test_quest_button_shows_title(game):
+    h = Harness(game)
+    await h.send(1, "/register")
+    await game.travel.travel(1, "mars")
+    game.ctx.clock.advance(60)
+    await game.travel.travel(1, "earth")
+    await h.send(1, "/quests")
+    await h.press(1, h.button("Выполнить 2 успешных перелёта"))
+    assert h.bot.answers()[-1][0] == "🎁 Награда получена"

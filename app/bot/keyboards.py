@@ -98,7 +98,11 @@ def quests_kb(token: str, quests: list[QuestView]) -> InlineKeyboardMarkup | Non
     b = InlineKeyboardBuilder()
     for q in quests:
         if q.done and not q.claimed:
-            b.add(token_button(f"🎁 {QUESTS[q.quest_id].reward_credits} кр. — {q.quest_id}", token, q.quest_id))
+            b.add(
+                token_button(
+                    f"🎁 {QUESTS[q.quest_id].reward_credits} кр. — {QUESTS[q.quest_id].title}", token, q.quest_id
+                )
+            )
     b.adjust(1)
     markup = b.as_markup()
     return markup if markup.inline_keyboard else None
