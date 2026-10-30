@@ -69,10 +69,13 @@ class ShipService:
             raise ValidationError("❓ Неизвестный модуль. Доступны: cargo, engine, weapon, armor.")
         async with self.ctx.db.transaction() as conn:
             now = self.ctx.clock.now()
-            await self._consume(conn, token, user_id, "upgrade", now)
+            payload = await self._consume(conn, token, user_id, "upgrade", now)
             await repo.require_user(conn, user_id)
             ship = await load_ship(conn, user_id, now)
             current = ship.module_level(module)
+            # Кнопка показывала цену для уровня из payload; если уровень уже другой — цена другая.
+            if payload.get("levels", {}).get(module, current) != current:
+                raise StaleAction()
             if current >= MODULE_MAX_LEVEL:
                 raise GameError(f"🔝 {MODULES[module]} уже максимального уровня {MODULE_MAX_LEVEL}.")
             new_level = current + 1
@@ -100,10 +103,13 @@ class ShipService:
             raise ValidationError("🔢 Количество прочности для ремонта — целое число больше 0.")
         async with self.ctx.db.transaction() as conn:
             now = self.ctx.clock.now()
-            await self._consume(conn, token, user_id, "repair", now)
+            payload = await self._consume(conn, token, user_id, "repair", now)
             await repo.require_user(conn, user_id)
             ship = await load_ship(conn, user_id, now)
             missing = ship.max_hp - ship.hp
+            # Кнопка показывала стоимость ремонта для прежних повреждений.
+            if payload.get("missing", missing) != missing:
+                raise StaleAction()
             if missing <= 0:
                 raise GameError("✅ Корабль полностью исправен.")
             units = missing if amount is None else amount

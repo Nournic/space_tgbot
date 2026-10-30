@@ -79,7 +79,7 @@ async def render_upgrades(game: Game, user_id: int, chat_id: int | None, prefix:
         "",
         "Команда: <code>/upgrade engine</code>",
     ]
-    token = await game.tokens.issue(user_id, chat_id, "upgrade")
+    token = await game.tokens.issue(user_id, chat_id, "upgrade", {"levels": levels})
     return "\n".join(lines), upgrade_kb(token, levels, costs)
 
 
@@ -114,7 +114,7 @@ async def cmd_repair(message: Message, command: CommandObject, game: Game) -> No
         await message.answer(f"✅ Корабль исправен: ❤️ {p.ship.hp}/{p.ship.max_hp}")
         return
     cost = missing * REPAIR_COST_PER_HP
-    token = await game.tokens.issue(uid, message.chat.id, "repair")
+    token = await game.tokens.issue(uid, message.chat.id, "repair", {"missing": missing})
     await message.answer(
         f"🛠 Повреждения: {missing} HP (❤️ {p.ship.hp}/{p.ship.max_hp}). "
         f"Полный ремонт: <b>{cost}</b> кр. ({REPAIR_COST_PER_HP} кр./HP), баланс {p.balance}.\n"

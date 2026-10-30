@@ -88,6 +88,8 @@ class EconomyService:
                 payload = await repo.consume_token(conn, token, user_id, "market", now)
                 if payload.get("planet") != user["planet_id"] or payload.get("item") != item_id:
                     raise StaleAction()
+                if payload.get("date", utc_date(now)) != utc_date(now):  # цены карточки — вчерашние
+                    raise StaleAction()
             planet = user["planet_id"]
             # Цена берётся на сервере внутри транзакции, а не из кнопки.
             unit_buy = buy_price(utc_date(now), planet, item_id, self.ctx.seed)
