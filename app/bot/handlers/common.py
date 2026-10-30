@@ -41,11 +41,11 @@ HELP_TEXT = f"""🚀 <b>Космический Трейдер</b> — коман
 <b>Бои</b>
 /hunt — охота на пиратов ({HUNT_ENERGY} 🔋)
 <code>/challenge 100</code> — ответом на сообщение игрока: дуэль со ставкой
-/duels — ваши вызовы
+/duels — ваши вызовы (<code>/duels cancel ID</code> — отменить)
 
 <b>Сделки</b>
 <code>/offer water 5 200</code> — ответом на сообщение покупателя: продать 5 воды за 200 кр.
-/offers — активные предложения
+/offers — активные предложения (<code>/offers cancel ID</code> — отменить)
 
 <b>Прогресс</b>
 /quests, <code>/claim daily_sell</code> — ежедневные задания

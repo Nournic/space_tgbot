@@ -8,7 +8,18 @@ from aiogram.types import CallbackQuery, Message
 
 from app.bot.formatting import item_title, mention, offer_text
 from app.bot.keyboards import OfferCB, offer_kb
-from app.bot.utils import cb_answer, display_name, parse_int, parse_item, reply_target, safe_edit, split_args
+from app.bot.utils import (
+    cb_answer,
+    close_by_id,
+    display_name,
+    edit_original,
+    parse_close_args,
+    parse_int,
+    parse_item,
+    reply_target,
+    safe_edit,
+    split_args,
+)
 from app.constants import MAX_PRICE, MAX_QTY
 from app.errors import StaleAction, ValidationError
 from app.services import Game
@@ -40,9 +51,25 @@ async def cmd_offer(message: Message, command: CommandObject, game: Game) -> Non
 
 
 @router.message(Command("offers"))
-async def cmd_offers(message: Message, game: Game) -> None:
-    incoming, outgoing = await game.offers.list_for(message.from_user.id)
+async def cmd_offers(message: Message, command: CommandObject, game: Game) -> None:
+    uid = message.from_user.id
+    close = parse_close_args(split_args(command.args), "offers")
     now = game.ctx.clock.now()
+    if close is not None:
+        action, offer_id = close
+        service = game.offers.cancel if action == "cancel" else game.offers.decline
+        outcome = await close_by_id(
+            service,
+            offer_id,
+            uid,
+            "⛔ Отменить может только продавец, отклонить — только покупатель.",
+            f"⌛ Предложение #{offer_id} уже закрыто или не найдено.",
+        )
+        text = offer_text(outcome.offer, now)
+        await edit_original(message.bot, outcome.offer.chat_id, outcome.offer.message_id, text)
+        await message.reply(text)
+        return
+    incoming, outgoing = await game.offers.list_for(uid)
     lines = ["🤝 <b>Активные P2P-предложения</b>", "", "📥 Входящие:"]
     lines += [
         f"#{o.id} от {mention(o.seller_id, o.seller_name)}: {o.quantity} × {item_title(o.item_id)} "
@@ -55,6 +82,8 @@ async def cmd_offers(message: Message, game: Game) -> None:
         f"за {o.price} кр. (ещё {format_duration(o.expires_at - now)})"
         for o in outgoing
     ] or ["—"]
+    if incoming or outgoing:
+        lines += ["", "Отменить своё: <code>/offers cancel ID</code>, отклонить: <code>/offers decline ID</code>"]
     await message.answer("\n".join(lines))
 
 

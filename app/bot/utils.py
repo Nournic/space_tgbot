@@ -6,11 +6,12 @@ import html
 import logging
 import re
 
+from aiogram import Bot
 from aiogram.exceptions import TelegramAPIError, TelegramBadRequest
 from aiogram.types import CallbackQuery, InlineKeyboardMarkup, Message, User
 
 from app.constants import ITEMS, PLANETS
-from app.errors import ValidationError
+from app.errors import NotYourButton, StaleAction, ValidationError
 
 log = logging.getLogger(__name__)
 
@@ -104,3 +105,38 @@ async def safe_edit(message: Message | None, text: str, markup: InlineKeyboardMa
             log.debug("edit_text failed: %s", exc)
     except TelegramAPIError as exc:
         log.debug("edit_text failed: %s", exc)
+
+
+CLOSE_ACTIONS = ("cancel", "decline")
+
+
+def parse_close_args(args: list[str], command: str) -> tuple[str, int] | None:
+    """``/offers cancel 12`` → ("cancel", 12); без аргументов — None (показать список)."""
+    if not args:
+        return None
+    if len(args) != 2 or args[0].lower() not in CLOSE_ACTIONS:
+        raise ValidationError(
+            f"✍️ Формат: <code>/{command} cancel ID</code> — отменить своё, "
+            f"<code>/{command} decline ID</code> — отклонить входящее."
+        )
+    return args[0].lower(), parse_int(args[1], "ID", 1, 10**12)
+
+
+async def close_by_id(close, object_id: int, user_id: int, not_yours: str, closed: str):
+    """Закрывает предложение или вызов командой; ошибки кнопок переводятся в текст для команды."""
+    try:
+        return await close(object_id, user_id)
+    except NotYourButton:
+        raise ValidationError(not_yours) from None
+    except StaleAction:
+        raise ValidationError(closed) from None
+
+
+async def edit_original(bot: Bot, chat_id: int | None, message_id: int | None, text: str) -> None:
+    """Обновляет исходное сообщение предложения/вызова и убирает кнопки (после commit)."""
+    if chat_id is None or message_id is None:
+        return
+    try:
+        await bot.edit_message_text(text=text, chat_id=chat_id, message_id=message_id, reply_markup=None)
+    except TelegramAPIError as exc:
+        log.debug("edit original %s/%s failed: %s", chat_id, message_id, exc)
