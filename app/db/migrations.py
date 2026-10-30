@@ -12,8 +12,6 @@ import logging
 import time
 from typing import TYPE_CHECKING
 
-from app.constants import ACHIEVEMENT_ORDER, ACHIEVEMENTS, ITEM_ORDER, PLANET_ORDER, SHIP_ORDER
-
 if TYPE_CHECKING:
     from app.db.connection import Database
 
@@ -25,9 +23,26 @@ def _in_list(values: tuple[str, ...]) -> str:
     return ", ".join(f"'{v}'" for v in values)
 
 
-PLANETS_SQL = _in_list(PLANET_ORDER)
-ITEMS_SQL = _in_list(ITEM_ORDER)
-SHIPS_SQL = _in_list(SHIP_ORDER)
+# Контент V1 заморожен литералами: схема свежей БД обязана совпадать с продом.
+# Новые планеты, товары, корабли, задания и достижения добавляются новой миграцией,
+# а не правкой этих списков (см. AGENTS.md, «Миграции»).
+V1_PLANETS = ("earth", "mars", "ceres", "venus", "europa", "titan")
+V1_ITEMS = ("water", "iron", "spice", "silicon", "titanium", "fuel_cell", "electronics", "medicine")
+V1_SHIPS = ("shuttle", "scout", "freighter", "corvette")
+V1_ACHIEVEMENTS = (
+    ("first_trade", "🛍 Первая сделка", "1 успешная рыночная операция"),
+    ("merchant_100", "💼 Торговец", "100 успешных сделок"),
+    ("traveler_10", "🚀 Путешественник", "10 перелётов"),
+    ("miner_100", "⛏ Старатель", "100 добытых ресурсов"),
+    ("pirate_hunter_10", "☠️ Гроза пиратов", "10 побед в PvE"),
+    ("pvp_10", "⚔️ Дуэлянт", "10 побед в PvP"),
+    ("rich_10000", "💰 Богач", "Иметь 10 000 кредитов на доступном балансе"),
+    ("crafter_25", "🛠 Инженер", "25 успешных производств"),
+)
+
+PLANETS_SQL = _in_list(V1_PLANETS)
+ITEMS_SQL = _in_list(V1_ITEMS)
+SHIPS_SQL = _in_list(V1_SHIPS)
 
 V1: list[str] = [
     """
@@ -232,8 +247,7 @@ MIGRATIONS: list[tuple[int, str, list[str]]] = [
 
 def _seed_v1() -> list[tuple[str, tuple]]:
     return [
-        ("INSERT OR IGNORE INTO achievements (id, title, description) VALUES (?, ?, ?)", (a.id, a.title, a.description))
-        for a in (ACHIEVEMENTS[k] for k in ACHIEVEMENT_ORDER)
+        ("INSERT OR IGNORE INTO achievements (id, title, description) VALUES (?, ?, ?)", row) for row in V1_ACHIEVEMENTS
     ]
 
 
