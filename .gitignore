@@ -19,3 +19,7 @@ backups/
 .claude/settings.local.json
 .codex/
 .ruff_cache/
+
+# IDE
+.idea/
+.vscode/

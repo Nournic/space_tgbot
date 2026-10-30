@@ -234,7 +234,7 @@ tests/             pytest-тесты (сервисы, хендлеры, конк
 
 ## Разработка
 
-Командная работа идёт через ветки и PR с обязательным CI (GitHub Actions): ruff и pytest на Python 3.11/3.12, плюс сборка Docker. Процесс описан в [CONTRIBUTING.md](CONTRIBUTING.md). Правила для ИИ-агентов (Claude Code, Codex) — в [AGENTS.md](AGENTS.md). `CLAUDE.md` импортирует этот файл, а общие разрешения Claude Code лежат в `.claude/settings.json`.
+Командная работа идёт через ветки и PR с обязательным CI (GitHub Actions): ruff и pytest на Python 3.11/3.12/3.13, плюс сборка Docker. Процесс описан в [CONTRIBUTING.md](CONTRIBUTING.md). Правила для ИИ-агентов (Claude Code, Codex) — в [AGENTS.md](AGENTS.md). `CLAUDE.md` импортирует этот файл, а общие разрешения Claude Code лежат в `.claude/settings.json`.
 
 ```bash
 pip install -r requirements-dev.txt
